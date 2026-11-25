@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { LightbulbIcon, ShieldIcon, WalletIcon } from '@/components/Icons';
+import { LightbulbIcon, ShieldIcon } from '@/components/Icons';
+import { WalletLogo } from '@/components/ui/WalletLogo';
 import {
   calculateCategoryBudgets,
   calculateNeedVsWantSummary,
@@ -237,7 +238,7 @@ export function DashboardView({
             <div key={w.id} className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-obsidian text-limecard">
-                  <WalletIcon className="h-4 w-4" />
+                  <WalletLogo type={w.type} name={w.name} className="h-5 w-5" />
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-obsidian">{w.name}</p>

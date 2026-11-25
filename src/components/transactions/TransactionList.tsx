@@ -1,6 +1,7 @@
 'use client';
 
 import { PaperCard } from '@/components/ui/PaperCard';
+import { WalletLogo } from '@/components/ui/WalletLogo';
 import { formatRupiah } from '@/lib/format';
 import type { Category, Transaction, Wallet } from '@/lib/types';
 
@@ -17,7 +18,7 @@ export function TransactionList({
   categories,
   onDelete,
 }: TransactionListProps) {
-  const walletById = new Map(wallets.map((w) => [w.id, w.name]));
+  const walletObjById = new Map(wallets.map((w) => [w.id, w]));
   const categoryById = new Map(categories.map((c) => [c.id, c.name]));
 
   return (
@@ -33,44 +34,55 @@ export function TransactionList({
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-stone-100">
-          {transactions.map((tx) => (
-            <li key={tx.id} className="flex items-center justify-between gap-2 py-3 text-sm">
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-obsidian">{tx.note}</p>
-                <p className="text-xs text-stone-500">
-                  {tx.date.slice(0, 10)} · {walletById.get(tx.wallet_id) ?? 'Dompet'}
-                  {tx.type === 'transfer' && tx.to_wallet_id
-                    ? ` → ${walletById.get(tx.to_wallet_id) ?? 'Dompet'}`
-                    : ''}
-                  {tx.category_id ? ` · ${categoryById.get(tx.category_id) ?? ''}` : ''}
-                  {tx.need_or_want ? ` · ${tx.need_or_want}` : ''}
-                  {tx.work_hours ? ` · ${tx.work_hours} jam` : ''}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <span
-                  className={`font-semibold ${
-                    tx.type === 'income'
-                      ? 'text-brand-600'
-                      : tx.type === 'transfer'
-                        ? 'text-stone-500'
-                        : 'text-obsidian'
-                  }`}
-                >
-                  {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                  {formatRupiah(tx.amount)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => void onDelete(tx.id)}
-                  aria-label={`Hapus transaksi ${tx.note}`}
-                  className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-200"
-                >
-                  Hapus
-                </button>
-              </div>
-            </li>
-          ))}
+          {transactions.map((tx) => {
+            const wallet = walletObjById.get(tx.wallet_id);
+            const toWallet = tx.to_wallet_id ? walletObjById.get(tx.to_wallet_id) : undefined;
+            return (
+              <li key={tx.id} className="flex items-center justify-between gap-2.5 py-3 text-sm">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-obsidian text-limecard">
+                    <WalletLogo
+                      type={wallet?.type ?? 'custom'}
+                      name={wallet?.name ?? ''}
+                      className="h-5 w-5"
+                    />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-obsidian">{tx.note}</p>
+                    <p className="truncate text-xs text-stone-500">
+                      {tx.date.slice(0, 10)} · {wallet?.name ?? 'Dompet'}
+                      {tx.type === 'transfer' && toWallet ? ` → ${toWallet.name}` : ''}
+                      {tx.category_id ? ` · ${categoryById.get(tx.category_id) ?? ''}` : ''}
+                      {tx.need_or_want ? ` · ${tx.need_or_want}` : ''}
+                      {tx.work_hours ? ` · ${tx.work_hours} jam` : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`font-semibold ${
+                      tx.type === 'income'
+                        ? 'text-brand-600'
+                        : tx.type === 'transfer'
+                          ? 'text-stone-500'
+                          : 'text-obsidian'
+                    }`}
+                  >
+                    {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
+                    {formatRupiah(tx.amount)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void onDelete(tx.id)}
+                    aria-label={`Hapus transaksi ${tx.note}`}
+                    className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-200"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </PaperCard>
