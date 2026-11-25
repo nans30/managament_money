@@ -57,6 +57,7 @@ export function SettingsView({
 }: SettingsViewProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
   const [authFeedback, setAuthFeedback] = useState<string | null>(null);
 
   const [newWalletName, setNewWalletName] = useState('');
@@ -80,24 +81,79 @@ export function SettingsView({
     );
   };
 
+  const formatAuthError = (msg: string): string => {
+    const lower = msg.toLowerCase();
+    if (lower.includes('invalid login credentials')) {
+      return 'Email atau kata sandi belum cocok. Kalau belum punya akun, klik "Daftar Baru" dulu ya.';
+    }
+    if (lower.includes('email not confirmed')) {
+      return 'Email belum dikonfirmasi. Cek inbox/spam kamu, atau matikan "Confirm email" di Supabase → Authentication → Providers → Email.';
+    }
+    if (lower.includes('password should be at least')) {
+      return 'Kata sandi minimal 6 karakter ya.';
+    }
+    if (lower.includes('user already registered')) {
+      return 'Email ini sudah terdaftar. Langsung klik "Masuk Email" saja.';
+    }
+    if (lower.includes('provider is not enabled')) {
+      return 'Login Google belum diaktifkan di dashboard Supabase (Authentication → Providers → Google).';
+    }
+    if (lower.includes('rate limit')) {
+      return 'Terlalu banyak percobaan dalam waktu singkat. Tunggu sebentar lalu coba lagi.';
+    }
+    return msg;
+  };
+
   const handleAuth = async (mode: 'login' | 'register') => {
     setAuthFeedback(null);
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setAuthFeedback('Masukkan alamat email yang valid dulu ya.');
+      return;
+    }
+    if (password.length < 6) {
+      setAuthFeedback('Kata sandi minimal 6 karakter ya.');
+      return;
+    }
+
+    setAuthLoading(true);
     try {
       const res =
         mode === 'login'
-          ? await signInWithEmail(email, password)
-          : await signUpWithEmail(email, password);
+          ? await signInWithEmail(cleanEmail, password)
+          : await signUpWithEmail(cleanEmail, password);
       if (res.error) {
-        setAuthFeedback(res.error.message);
-      } else {
+        setAuthFeedback(formatAuthError(res.error.message));
+      } else if (mode === 'register' && !res.data.session) {
         setAuthFeedback(
-          mode === 'register'
-            ? 'Pendaftaran berhasil! Cek email jika perlu konfirmasi.'
-            : 'Berhasil masuk. Sinkronisasi berjalan otomatis.'
+          'Pendaftaran berhasil! Cek inbox/spam email kamu untuk klik tautan konfirmasi (atau matikan "Confirm email" di Supabase agar langsung masuk).'
         );
+      } else {
+        setAuthFeedback('Berhasil masuk! Sinkronisasi cloud berjalan otomatis.');
       }
     } catch (err) {
-      setAuthFeedback(err instanceof Error ? err.message : 'Gagal memproses autentikasi.');
+      setAuthFeedback(
+        err instanceof Error ? formatAuthError(err.message) : 'Gagal memproses autentikasi.'
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setAuthFeedback(null);
+    setAuthLoading(true);
+    try {
+      const res = await signInWithGoogle();
+      if (res.error) {
+        setAuthFeedback(formatAuthError(res.error.message));
+      }
+    } catch (err) {
+      setAuthFeedback(
+        err instanceof Error ? formatAuthError(err.message) : 'Login Google belum aktif di Supabase.'
+      );
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -227,27 +283,34 @@ export function SettingsView({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
+                  disabled={authLoading}
                   onClick={() => void handleAuth('login')}
-                  className="rounded-2xl bg-obsidian px-4 py-2.5 text-xs font-semibold text-white"
+                  className="rounded-2xl bg-obsidian px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
                 >
-                  Masuk Email
+                  {authLoading ? 'Memproses...' : 'Masuk Email'}
                 </button>
                 <button
                   type="button"
+                  disabled={authLoading}
                   onClick={() => void handleAuth('register')}
-                  className="rounded-2xl bg-white/85 px-4 py-2.5 text-xs font-semibold text-obsidian"
+                  className="rounded-2xl bg-white/85 px-4 py-2.5 text-xs font-semibold text-obsidian disabled:opacity-60"
                 >
-                  Daftar Baru
+                  {authLoading ? '...' : 'Daftar Baru'}
                 </button>
               </div>
               <button
                 type="button"
-                onClick={() => void signInWithGoogle()}
-                className="w-full rounded-2xl bg-white px-4 py-2.5 text-xs font-semibold text-obsidian"
+                disabled={authLoading}
+                onClick={() => void handleGoogleAuth()}
+                className="w-full rounded-2xl bg-white px-4 py-2.5 text-xs font-semibold text-obsidian disabled:opacity-60"
               >
                 Masuk dengan Google
               </button>
-              {authFeedback && <p className="text-xs font-medium text-obsidian">{authFeedback}</p>}
+              {authFeedback && (
+                <p className="rounded-xl bg-white/80 px-3 py-2 text-xs font-medium text-obsidian">
+                  {authFeedback}
+                </p>
+              )}
             </div>
           )}
         </div>

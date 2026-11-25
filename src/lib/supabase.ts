@@ -40,6 +40,7 @@ export function getSupabaseClient(): SupabaseClient | null {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
+        detectSessionInUrl: true,
       },
     });
   }
@@ -65,7 +66,13 @@ export async function signUpWithEmail(email: string, password: string) {
   if (!client) {
     throw new Error('Supabase belum dikonfigurasi di .env.local');
   }
-  return client.auth.signUp({ email, password });
+  return client.auth.signUp({
+    email: email.trim(),
+    password,
+    options: {
+      emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+    },
+  });
 }
 
 /**
