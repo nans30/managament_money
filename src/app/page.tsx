@@ -10,6 +10,7 @@ import {
   SettingsIcon,
   SunIcon,
   TargetIcon,
+  WalletIcon,
   WifiIcon,
   WifiOffIcon,
 } from '@/components/Icons';
@@ -25,6 +26,14 @@ import { t } from '@/lib/i18n';
 
 type ActiveTab = 'dashboard' | 'transactions' | 'profile' | 'planning' | 'settings';
 
+const TAB_TITLES: Record<ActiveTab, string> = {
+  dashboard: 'DompetTenang',
+  transactions: 'Riwayat',
+  profile: 'Fitur Profil',
+  planning: 'Rencana',
+  settings: 'Pengaturan',
+};
+
 export default function HomePage() {
   const { state, actions } = useFinanceStore();
   const { theme, isDark, setTheme, toggleLightDark } = useTheme();
@@ -33,8 +42,8 @@ export default function HomePage() {
 
   if (state.loading) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-base font-medium text-stone-700 dark:text-stone-300">
+      <main className="mx-auto max-w-md px-4 py-16 text-center">
+        <p className="text-sm font-medium text-stone-600 dark:text-stone-400">
           Memuat catatan keuangan lokal...
         </p>
       </main>
@@ -43,8 +52,8 @@ export default function HomePage() {
 
   if (state.error) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16 text-center">
-        <div className="rounded-2xl border border-warm-500/40 bg-warm-50 p-6 text-warm-700 dark:bg-amber-950/50 dark:text-amber-200">
+      <main className="mx-auto max-w-md px-4 py-16 text-center">
+        <div className="rounded-[24px] bg-coral p-6 text-obsidian">
           <p className="font-semibold">Ada kendala saat membuka penyimpanan lokal.</p>
           <p className="mt-1 text-sm">{state.error}</p>
         </div>
@@ -60,46 +69,48 @@ export default function HomePage() {
   const categoryById = new Map(state.categories.map((c) => [c.id, c.name]));
 
   return (
-    <div className="mx-auto max-w-lg px-4 pt-5">
-      {/* Header Minimalis */}
-      <header className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-base font-semibold tracking-tight text-stone-900 dark:text-stone-100">
-            {text.appName}
-          </h1>
-          <span
-            title={state.isOnline ? 'Online · Sinkronisasi siap' : 'Mode Offline'}
-            className="inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400"
-          >
-            {state.isOnline ? (
-              <WifiIcon className="h-3.5 w-3.5 text-brand-500 dark:text-emerald-400" />
-            ) : (
-              <WifiOffIcon className="h-3.5 w-3.5 text-warm-500" />
-            )}
-            <span className="sr-only">{state.isOnline ? 'Online' : 'Offline'}</span>
+    <div className="mx-auto max-w-md px-4 pt-5 pb-28">
+      {/* Header Khas Referensi: Ikon kotak garis + Judul Ekspresif + Kontrol Kanan */}
+      <header className="mb-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-obsidian/20 text-obsidian dark:border-limecard/60 dark:text-limecard">
+            <WalletIcon className="h-5 w-5" />
           </span>
+
+          <div className="flex items-center gap-2">
+            <span
+              title={state.isOnline ? 'Online' : 'Mode Offline'}
+              className="inline-flex h-10 items-center gap-1.5 rounded-full border border-stone-300/80 px-3 text-xs font-medium text-stone-700 dark:border-white/15 dark:text-stone-300"
+            >
+              {state.isOnline ? (
+                <WifiIcon className="h-3.5 w-3.5 text-brand-500 dark:text-limecard" />
+              ) : (
+                <WifiOffIcon className="h-3.5 w-3.5 text-coral" />
+              )}
+              <span>{state.isOnline ? 'Online' : 'Offline'}</span>
+            </span>
+
+            <button
+              type="button"
+              onClick={toggleLightDark}
+              aria-label={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+              title={isDark ? 'Mode Terang' : 'Mode Gelap'}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-stone-300/80 bg-white text-obsidian hover:bg-stone-100 dark:border-white/15 dark:bg-obsidian-soft dark:text-limecard dark:hover:bg-obsidian-muted"
+            >
+              {isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={toggleLightDark}
-          aria-label={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-          title={isDark ? 'Mode Terang' : 'Mode Gelap'}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-stone-200/80 bg-white text-stone-700 hover:bg-stone-100 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
-        >
-          {isDark ? <SunIcon className="h-4 w-4 text-amber-400" /> : <MoonIcon className="h-4 w-4" />}
-        </button>
+        <h1 className="text-2xl font-semibold tracking-tight text-obsidian dark:text-limecard">
+          {tab === 'dashboard' ? text.appName : TAB_TITLES[tab]}
+        </h1>
       </header>
 
       {/* Konten Utama */}
       <main className="space-y-4">
         {tab === 'dashboard' && (
           <>
-            <QuickAddForm
-              wallets={state.wallets}
-              categories={state.categories}
-              onSave={actions.addTransaction}
-            />
             <DashboardView
               profile={state.profile}
               wallets={state.wallets}
@@ -110,25 +121,33 @@ export default function HomePage() {
                 actions.updateProfile({ emergency_mode: !state.profile?.emergency_mode })
               }
             />
+            <QuickAddForm
+              wallets={state.wallets}
+              categories={state.categories}
+              onSave={actions.addTransaction}
+            />
           </>
         )}
 
         {tab === 'transactions' && (
-          <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 dark:bg-stone-900 dark:border-stone-800">
-            <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              Riwayat Transaksi ({state.transactions.length})
-            </h2>
+          <section className="surface-paper rounded-[28px] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-obsidian">Semua Transaksi</h2>
+              <span className="text-xs font-medium text-stone-500">
+                {state.transactions.length} catatan
+              </span>
+            </div>
             {state.transactions.length === 0 ? (
-              <p className="mt-3 text-sm text-stone-500 dark:text-stone-400">
-                Belum ada transaksi tercatat. Mulai catat lewat form Catat Cepat di Beranda.
+              <p className="mt-4 text-sm text-stone-500">
+                Belum ada transaksi tercatat. Mulai catat lewat kartu Catat Cepat di Beranda.
               </p>
             ) : (
-              <ul className="mt-3 divide-y divide-stone-100 dark:divide-stone-800">
+              <ul className="mt-4 divide-y divide-stone-100">
                 {state.transactions.map((tx) => (
                   <li key={tx.id} className="flex items-center justify-between gap-2 py-3 text-sm">
-                    <div>
-                      <p className="font-semibold text-stone-900 dark:text-stone-100">{tx.note}</p>
-                      <p className="text-xs text-stone-500 dark:text-stone-400">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-obsidian">{tx.note}</p>
+                      <p className="text-xs text-stone-500">
                         {tx.date.slice(0, 10)} · {walletById.get(tx.wallet_id) ?? 'Dompet'}
                         {tx.type === 'transfer' && tx.to_wallet_id
                           ? ` → ${walletById.get(tx.to_wallet_id) ?? 'Dompet'}`
@@ -138,14 +157,14 @@ export default function HomePage() {
                         {tx.work_hours ? ` · ${tx.work_hours} jam` : ''}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                       <span
-                        className={`font-bold ${
+                        className={`font-semibold ${
                           tx.type === 'income'
-                            ? 'text-brand-600 dark:text-emerald-400'
+                            ? 'text-brand-600'
                             : tx.type === 'transfer'
-                              ? 'text-stone-600 dark:text-stone-400'
-                              : 'text-stone-900 dark:text-stone-100'
+                              ? 'text-stone-500'
+                              : 'text-obsidian'
                         }`}
                       >
                         {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
@@ -155,7 +174,7 @@ export default function HomePage() {
                         type="button"
                         onClick={() => void actions.deleteTransaction(tx.id)}
                         aria-label={`Hapus transaksi ${tx.note}`}
-                        className="rounded-lg border border-stone-200 px-2 py-1 text-xs text-stone-500 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-400 dark:hover:bg-stone-800"
+                        className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-200"
                       >
                         Hapus
                       </button>
@@ -216,12 +235,12 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Navigasi Bawah Minimalis Ramah Satu Tangan */}
+      {/* Navigasi Bawah Mengambang Obsidian Pill (Aksen Lime saat aktif) */}
       <nav
         aria-label="Navigasi utama"
-        className="fixed bottom-0 left-0 right-0 z-20 border-t border-stone-200/70 bg-white/90 backdrop-blur-md dark:border-stone-800/80 dark:bg-stone-950/90"
+        className="fixed bottom-4 left-4 right-4 z-20 mx-auto max-w-md rounded-full border border-white/10 bg-obsidian/95 px-2 py-1.5 shadow-xl backdrop-blur-md"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5">
+        <div className="grid grid-cols-5">
           {(
             [
               { id: 'dashboard', label: 'Beranda', Icon: HomeIcon },
@@ -237,13 +256,11 @@ export default function HomePage() {
                 key={id}
                 type="button"
                 onClick={() => setTab(id)}
-                className={`flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors ${
-                  active
-                    ? 'text-brand-600 dark:text-emerald-400'
-                    : 'text-stone-400 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300'
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-full py-1.5 text-[10px] font-medium transition ${
+                  active ? 'bg-limecard text-obsidian font-semibold' : 'text-stone-400 hover:text-white'
                 }`}
               >
-                <Icon className="h-[18px] w-[18px]" />
+                <Icon className="h-4 w-4" />
                 <span>{label}</span>
               </button>
             );

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dompet-tenang-v3';
+const CACHE_NAME = 'dompet-tenang-v4';
 const MAX_CACHE_ENTRIES = 35;
 const OFFLINE_ASSETS = ['/', '/manifest.json', '/icon.svg'];
 

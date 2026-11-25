@@ -13,22 +13,35 @@ const config: Config = {
         sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Warna hangat dan netral, tanpa merah agresif untuk uang tipis
+        obsidian: {
+          DEFAULT: '#111211',
+          soft: '#1c1e1c',
+          muted: '#2a2d2a',
+        },
+        limecard: {
+          DEFAULT: '#c8f169',
+          bright: '#d4f77a',
+          deep: '#a6d642',
+        },
+        coral: {
+          DEFAULT: '#ff7e5f',
+          soft: '#ff967c',
+        },
         brand: {
-          50: '#f4f7f5',
-          100: '#e3ebe6',
+          50: '#f4f9e8',
+          100: '#e6f5c6',
           500: '#2d6a4f',
           600: '#1b4332',
           700: '#081c15',
         },
         warm: {
-          50: '#fffbeb',
-          100: '#fef3c7',
-          500: '#d97706',
-          600: '#b45309',
-          700: '#92400e',
-        }
-      }
+          50: '#fff5f0',
+          100: '#ffe4d6',
+          500: '#f97316',
+          600: '#ea580c',
+          700: '#9a3412',
+        },
+      },
     },
   },
   plugins: [],

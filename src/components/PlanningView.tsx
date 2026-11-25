@@ -112,7 +112,7 @@ export function PlanningView({
   return (
     <div className="space-y-5">
       {/* 1. TAGIHAN BERULANG & CICILAN / PAYLATER */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm">
         <h2 className="text-base font-bold text-stone-900">Tagihan Berulang & Cicilan / Paylater</h2>
         <form onSubmit={handleBillSubmit} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <input
@@ -182,7 +182,7 @@ export function PlanningView({
       </section>
 
       {/* 2. CATATAN UTANG & PIUTANG (TERMASUK UTANG WARUNG / INFORMAL) */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-bold text-stone-900">Utang & Piutang (Termasuk Warung/Teman)</h2>
           <span className="text-xs text-stone-600">
@@ -294,7 +294,7 @@ export function PlanningView({
       </section>
 
       {/* 3. TARGET TABUNGAN & DANA DARURAT */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm">
         <h2 className="text-base font-bold text-stone-900">Target Tabungan & Dana Darurat</h2>
         <form onSubmit={handleGoalSubmit} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <input

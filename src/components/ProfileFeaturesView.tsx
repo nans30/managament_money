@@ -89,7 +89,7 @@ export function ProfileFeaturesView({
   return (
     <div className="space-y-4">
       {/* BAGIAN FREELANCE / PENGHASILAN TIDAK MENENTU */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 space-y-4">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-4">
         <div>
           <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-600">
             Fitur Freelance & Penghasilan Tidak Menentu
@@ -253,7 +253,7 @@ export function ProfileFeaturesView({
       </section>
 
       {/* BAGIAN SERABUTAN / TRANSISI HARIAN */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 space-y-4">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-4">
         <div>
           <span className="rounded-full bg-warm-100 px-2.5 py-1 text-xs font-semibold text-warm-700">
             Fitur Serabutan & Transisi Harian

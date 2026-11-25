@@ -47,6 +47,7 @@ export function DashboardView({
     categoryBudgets,
     insights,
     upcomingBills,
+    dailyBars,
   } = useMemo(() => {
     const now = new Date();
     const p = getCustomPeriodRange(now, profile.period_start_day);
@@ -93,6 +94,27 @@ export function DashboardView({
       return diffDays <= 7 && diffDays >= -2;
     });
 
+    // 14 bar ritme pengeluaran 14 hari terakhir (visualisasi ringan seperti referensi)
+    const bars: number[] = [];
+    const msDay = 24 * 60 * 60 * 1000;
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).getTime();
+    for (let i = 13; i >= 0; i--) {
+      const dayEnd = todayEnd - i * msDay;
+      const dayStart = dayEnd - msDay + 1;
+      let sum = 0;
+      for (const tx of transactions) {
+        if (tx.deleted_at !== null || tx.type !== 'expense') continue;
+        const ms = new Date(tx.date).getTime();
+        if (ms >= dayStart && ms <= dayEnd) sum += tx.amount;
+      }
+      bars.push(sum);
+    }
+    const maxBar = Math.max(1, ...bars);
+    const normalizedBars = bars.map((v, idx) => ({
+      heightPct: v > 0 ? Math.max(22, Math.round((v / maxBar) * 100)) : 14 + ((idx * 7) % 18),
+      hasSpend: v > 0,
+    }));
+
     return {
       period: p,
       walletBalances: wBalances,
@@ -105,6 +127,7 @@ export function DashboardView({
       categoryBudgets: cBudgets,
       insights: ins,
       upcomingBills: upBills,
+      dailyBars: normalizedBars,
     };
   }, [profile, wallets, categories, transactions, recurringBills]);
 
@@ -115,92 +138,113 @@ export function DashboardView({
 
   return (
     <div className="space-y-4">
-      {/* Kartu Saldo Minimalis & Lega */}
-      <section className="rounded-2xl bg-white p-5 border border-stone-200/80 dark:border-stone-800 space-y-4">
-        <div className="flex items-start justify-between gap-3">
+      {/* HERO METRIC LANGSUNG DI ATAS KANVAS (Seperti layar tengah referensi) */}
+      <section className="px-1 pt-1 pb-2 space-y-4">
+        <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs font-medium text-stone-500 dark:text-stone-400">
               {profile.profile_type === 'daily'
                 ? 'Saldo tersedia · Mode Harian'
                 : profile.profile_type === 'freelance'
                   ? 'Saldo riil · Freelance'
                   : 'Saldo tersedia'}
             </p>
-            <p className="mt-1 text-3xl font-semibold tracking-tight text-stone-900">
-              {formatRupiah(totalBalance)}
+            <div className="mt-1 flex items-baseline gap-2">
+              <p className="text-3xl font-semibold tracking-tight text-obsidian dark:text-white">
+                {formatRupiah(totalBalance)}
+              </p>
+            </div>
+            <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
+              {profile.profile_type === 'daily' ? (
+                <>
+                  Cukup untuk <strong className="text-obsidian dark:text-limecard">~{survival.days} hari</strong>
+                </>
+              ) : (
+                <>
+                  Aman dipakai{' '}
+                  <strong className="text-obsidian dark:text-limecard">{formatRupiah(safeDaily)}/hari</strong>
+                  {profile.profile_type === 'freelance' ? ` · Runway ${runwayMonths} bln` : ''}
+                </>
+              )}
             </p>
           </div>
+
           <button
             type="button"
             onClick={() => void onToggleEmergencyMode()}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               profile.emergency_mode
-                ? 'border-warm-500/50 bg-warm-50 text-warm-700'
-                : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100'
+                ? 'bg-coral text-obsidian'
+                : 'border border-stone-300 text-stone-700 hover:bg-stone-200/60 dark:border-white/15 dark:text-stone-300 dark:hover:bg-white/10'
             }`}
           >
             <ShieldIcon className="h-3.5 w-3.5" />
-            <span>{profile.emergency_mode ? 'Hemat Aktif' : 'Mode Hemat'}</span>
+            <span>{profile.emergency_mode ? 'Hemat Aktif' : `${period.remainingDays}h lagi`}</span>
           </button>
         </div>
 
-        {/* Highlight Adaptif Sesuai Profil */}
-        {profile.profile_type === 'daily' ? (
-          <div className="rounded-xl bg-stone-50 px-3.5 py-3">
-            <p className="text-sm font-semibold text-stone-900">
-              Uang cukup untuk ~{survival.days} hari
-            </p>
-            <p className="mt-0.5 text-xs text-stone-500">{survival.adviceMessage}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 border-t border-stone-100 pt-3.5">
-            <div>
-              <p className="text-[11px] text-stone-500">Aman dipakai / hari</p>
-              <p className="mt-0.5 text-base font-semibold text-brand-600">
-                {formatRupiah(safeDaily)}
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] text-stone-500">
-                {profile.profile_type === 'freelance'
-                  ? 'Runway (pemasukan nol)'
-                  : `Sisa ${period.remainingDays} hari`}
-              </p>
-              <p className="mt-0.5 text-base font-semibold text-stone-900">
-                {profile.profile_type === 'freelance'
-                  ? `${runwayMonths} bulan`
-                  : `Tgl ${profile.period_start_day}`}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Mini Vertical Bar Visualizer (14 hari terakhir, ringan tanpa library chart) */}
+        <div className="flex h-12 items-end gap-1.5 px-0.5" aria-hidden="true">
+          {dailyBars.map((bar, idx) => (
+            <div
+              key={idx}
+              className={`flex-1 rounded-full transition-all ${
+                bar.hasSpend
+                  ? profile.emergency_mode
+                    ? 'bg-coral'
+                    : 'bg-obsidian dark:bg-limecard'
+                  : 'bg-stone-300/70 dark:bg-white/15'
+              }`}
+              style={{ height: `${bar.heightPct}%` }}
+            />
+          ))}
+        </div>
 
-        {/* Arus Kas Singkat Periode */}
-        <div className="flex items-center justify-between border-t border-stone-100 pt-3 text-xs text-stone-500">
+        {/* Ringkasan Arus Kas 1 Baris */}
+        <div className="flex items-center justify-between text-xs text-stone-600 dark:text-stone-400">
           <span>
-            Masuk <strong className="font-medium text-brand-600">{formatRupiah(totals.totalIncome)}</strong>
+            Masuk <strong className="font-semibold text-obsidian dark:text-limecard">{formatRupiah(totals.totalIncome)}</strong>
           </span>
           <span>
-            Keluar <strong className="font-medium text-stone-800">{formatRupiah(totals.totalExpense)}</strong>
+            Keluar <strong className="font-semibold text-obsidian dark:text-white">{formatRupiah(totals.totalExpense)}</strong>
           </span>
-          <span>Sisa {period.remainingDays}h</span>
+          {profile.profile_type === 'daily' && (
+            <span className="truncate max-w-[140px]">{survival.days} hari</span>
+          )}
         </div>
       </section>
 
-      {/* Dompet: Chip Ringkas */}
-      <section className="space-y-2">
-        <h3 className="inline-flex items-center gap-1.5 px-1 text-xs font-medium text-stone-500">
-          <WalletIcon className="h-3.5 w-3.5" />
-          <span>Dompet</span>
-        </h3>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+      {/* Banner Saran Tenang untuk Mode Harian / Mode Hemat (Coral Card ala referensi) */}
+      {(profile.emergency_mode || profile.profile_type === 'daily') && (
+        <section className="rounded-[24px] bg-coral p-4 text-obsidian shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-obsidian/70">
+            {profile.emergency_mode ? 'Mode Hemat Darurat Aktif' : 'Panduan Ketahanan Hari'}
+          </p>
+          <p className="mt-1 text-sm font-medium leading-relaxed text-obsidian">
+            {survival.adviceMessage}
+          </p>
+        </section>
+      )}
+
+      {/* KARTU PUTIH BERSIH: DOMPET */}
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-obsidian">Dompet</h3>
+          <span className="text-xs font-medium text-stone-500">{wallets.length} aktif</span>
+        </div>
+        <div className="mt-3.5 space-y-2.5">
           {wallets.map((w) => (
-            <div
-              key={w.id}
-              className="min-w-[112px] shrink-0 rounded-xl border border-stone-200/80 bg-white px-3 py-2.5 dark:border-stone-800"
-            >
-              <p className="text-[11px] text-stone-500">{w.name}</p>
-              <p className="mt-0.5 text-sm font-semibold text-stone-900">
+            <div key={w.id} className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-obsidian text-limecard">
+                  <WalletIcon className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-obsidian">{w.name}</p>
+                  <p className="text-[11px] capitalize text-stone-500">{w.type}</p>
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-obsidian">
                 {formatRupiah(walletBalances[w.id] ?? 0)}
               </p>
             </div>
@@ -208,78 +252,76 @@ export function DashboardView({
         </div>
       </section>
 
-      {/* Pengingat Tagihan Jatuh Tempo (Hanya muncul bila ada) */}
+      {/* Pengingat Tagihan Jatuh Tempo */}
       {upcomingBills.length > 0 && (
-        <section className="rounded-2xl border border-warm-500/30 bg-warm-50 p-4">
-          <h3 className="text-xs font-semibold text-warm-700">Tagihan Mendekati Jatuh Tempo</h3>
-          <ul className="mt-2 space-y-1.5 text-sm text-stone-800">
+        <section className="rounded-[24px] bg-coral/90 p-4 text-obsidian shadow-sm">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-obsidian/75">
+            Tagihan Mendekati Jatuh Tempo
+          </h3>
+          <ul className="mt-2 space-y-1.5 text-sm">
             {upcomingBills.map((b) => (
-              <li key={b.id} className="flex justify-between">
+              <li key={b.id} className="flex justify-between font-medium">
                 <span>
                   {b.name}
                   {b.total_installments ? ` (${b.current_installment}/${b.total_installments})` : ''}
                 </span>
-                <strong className="font-medium">{formatRupiah(b.amount)}</strong>
+                <strong>{formatRupiah(b.amount)}</strong>
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      {/* Perlu vs Pengen (Ringkas) */}
-      {(needWant.needAmount > 0 || needWant.wantAmount > 0) && (
-        <section className="rounded-2xl bg-white p-4 border border-stone-200/80 dark:border-stone-800">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-stone-700">Perlu vs Pengen</span>
-            <span className="text-stone-500">
+      {/* KARTU PUTIH BERSIH: BUDGET & PERLU VS PENGEN */}
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-obsidian">Budget Periode Ini</h3>
+          {(needWant.needAmount > 0 || needWant.wantAmount > 0) && (
+            <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-medium text-stone-700">
               {needWant.needPercentage}% Perlu · {needWant.wantPercentage}% Pengen
             </span>
-          </div>
-          <div className="mt-2.5 flex h-1.5 overflow-hidden rounded-full bg-stone-100">
-            <div className="bg-brand-500" style={{ width: `${needWant.needPercentage}%` }} />
-            <div className="bg-warm-500" style={{ width: `${needWant.wantPercentage}%` }} />
-          </div>
-        </section>
-      )}
+          )}
+        </div>
 
-      {/* Budget Kategori Minimalis */}
-      <section className="rounded-2xl bg-white p-4 border border-stone-200/80 dark:border-stone-800">
-        <h3 className="text-xs font-medium text-stone-500">Budget Periode Ini</h3>
-        <div className="mt-3 space-y-3">
+        <div className="space-y-3">
           {sortedBudgets.map((item) => (
-            <div key={item.categoryId} className="space-y-1">
+            <div key={item.categoryId} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-stone-800">{item.categoryName}</span>
+                <span className="font-semibold text-obsidian">{item.categoryName}</span>
                 <span className="text-stone-500">
                   {formatRupiah(item.spent)} / {formatRupiah(item.effectiveBudget)}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-stone-100">
+              <div className="h-2 overflow-hidden rounded-full bg-stone-100">
                 <div
                   className={`h-full rounded-full ${
-                    item.status === 'aman' ? 'bg-brand-500' : 'bg-warm-500'
+                    item.status === 'aman' ? 'bg-obsidian' : 'bg-coral'
                   }`}
                   style={{ width: `${Math.min(100, item.usagePercent)}%` }}
                 />
               </div>
               {item.gentleMessage && (
-                <p className="text-[11px] text-warm-700">{item.gentleMessage}</p>
+                <p className="text-[11px] font-medium text-warm-700">{item.gentleMessage}</p>
               )}
             </div>
           ))}
         </div>
       </section>
 
-      {/* Insight Otomatis */}
+      {/* KARTU PUTIH BERSIH: INSIGHT OTOMATIS */}
       {insights.length > 0 && (
-        <section className="rounded-2xl bg-white p-4 border border-stone-200/80 dark:border-stone-800">
-          <h3 className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500">
-            <LightbulbIcon className="h-3.5 w-3.5 text-warm-500" />
-            <span>Insight</span>
-          </h3>
-          <ul className="mt-2 space-y-2 text-xs leading-relaxed text-stone-600">
+        <section className="surface-paper rounded-[28px] p-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-limecard text-obsidian">
+              <LightbulbIcon className="h-4 w-4" />
+            </span>
+            <h3 className="text-sm font-semibold text-obsidian">Catatan & Insight</h3>
+          </div>
+          <ul className="mt-3 space-y-2 text-xs leading-relaxed text-stone-700">
             {insights.map((msg, idx) => (
-              <li key={idx}>{msg}</li>
+              <li key={idx} className="rounded-xl bg-stone-100/80 px-3 py-2.5">
+                {msg}
+              </li>
             ))}
           </ul>
         </section>

@@ -5,46 +5,33 @@
 @layer base {
   html,
   body {
-    background-color: #eef2f0;
-    color: #111827;
+    background-color: #f2f4f0;
+    color: #111211;
     color-scheme: light;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     font-variant-numeric: tabular-nums;
     -webkit-tap-highlight-color: transparent;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
-  html:not(.dark) input,
-  html:not(.dark) select,
-  html:not(.dark) textarea {
-    background-color: #ffffff;
-    border-color: #cbd5e1;
-    color: #111827;
-  }
-
-  html:not(.dark) input::placeholder,
-  html:not(.dark) textarea::placeholder {
-    color: #6b7280;
-  }
-
   html.dark,
   html.dark body {
-    background-color: #0b0d0c;
-    color: #f4f4f5;
+    background-color: #111211;
+    color: #f4f5f2;
     color-scheme: dark;
   }
 
-  html.dark input,
-  html.dark select,
-  html.dark textarea {
-    background-color: #1c2420;
-    border-color: #313d37;
-    color: #f3f4f6;
+  /* Input bersih di dalam kartu putih maupun lime */
+  input,
+  select,
+  textarea {
+    background-color: #ffffff;
+    border-color: #d6dbd6;
+    color: #111211;
   }
 
-  html.dark input::placeholder,
-  html.dark textarea::placeholder {
-    color: #9ca3af;
+  input::placeholder,
+  textarea::placeholder {
+    color: #6b7280;
   }
 
   /* Memastikan semua kontrol interaktif memenuhi target sentuh minimal 44px */
@@ -57,80 +44,20 @@
   }
 }
 
-/* Jaminan kontras tinggi di Light Mode (teks selalu gelap & jelas di atas kartu putih) */
-html:not(.dark) .text-stone-900 {
-  color: #111827;
-}
-html:not(.dark) .text-stone-800 {
-  color: #1f2937;
-}
-html:not(.dark) .text-stone-700 {
-  color: #374151;
-}
-html:not(.dark) .text-stone-600,
-html:not(.dark) .text-stone-500 {
-  color: #4b5563;
-}
-html:not(.dark) .text-stone-400 {
-  color: #6b7280;
-}
-html:not(.dark) .border-stone-200,
-html:not(.dark) .border-stone-200\/80 {
-  border-color: #d4dcd8;
+/*
+ * Kartu putih (.surface-paper) SELALU putih bersih dengan teks hitam pekat
+ * baik di Dark Mode maupun Light Mode (seperti kartu putih pada referensi UI),
+ * sehingga keterbacaan teks 100% terjamin dan kontrasnya sangat tajam.
+ */
+.surface-paper {
+  background-color: #ffffff;
+  color: #111211;
 }
 
-/* Permukaan & tipografi Dark Mode yang tenang dan kontras tinggi di seluruh komponen */
-html.dark .bg-white,
-html.dark .focus\:bg-white:focus {
-  background-color: #161c19;
-}
-html.dark .bg-white\/90 {
-  background-color: rgba(11, 13, 12, 0.92);
-}
-html.dark .bg-stone-50 {
-  background-color: #1e2622;
-}
-html.dark .bg-stone-100 {
-  background-color: #26302b;
-}
-html.dark .bg-stone-200 {
-  background-color: #2f3b35;
-}
-html.dark .bg-warm-50 {
-  background-color: rgba(146, 64, 14, 0.22);
-}
-html.dark .bg-warm-100 {
-  background-color: rgba(146, 64, 14, 0.35);
-}
-html.dark .bg-brand-50 {
-  background-color: rgba(45, 106, 79, 0.22);
-}
-html.dark .bg-brand-100 {
-  background-color: rgba(45, 106, 79, 0.32);
-}
-html.dark .border-stone-100,
-html.dark .border-stone-200,
-html.dark .border-stone-200\/80,
-html.dark .border-stone-300 {
-  border-color: #2b3530;
-}
-html.dark .text-stone-900 {
-  color: #f3f4f6;
-}
-html.dark .text-stone-800 {
-  color: #e5e7eb;
-}
-html.dark .text-stone-700 {
-  color: #d1d5db;
-}
-html.dark .text-stone-600,
-html.dark .text-stone-500 {
-  color: #9ca3af;
-}
-html.dark .text-brand-600,
-html.dark .text-brand-700 {
-  color: #6ee7b7;
-}
-html.dark .text-warm-700 {
-  color: #fcd34d;
+.surface-paper input,
+.surface-paper select,
+.surface-paper textarea {
+  background-color: #f5f6f4;
+  border-color: #e2e5e0;
+  color: #111211;
 }

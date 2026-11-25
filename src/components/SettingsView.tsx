@@ -142,8 +142,8 @@ export function SettingsView({
   return (
     <div className="space-y-5">
       {/* 0. TAMPILAN LIGHT / DARK MODE */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 dark:bg-stone-900 dark:border-stone-800 space-y-3">
-        <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">Tampilan (Tema)</h2>
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-3">
+        <h2 className="text-sm font-semibold text-obsidian">Tampilan (Tema)</h2>
         <div className="grid grid-cols-3 gap-2">
           {(
             [
@@ -156,10 +156,10 @@ export function SettingsView({
               key={id}
               type="button"
               onClick={() => onChangeTheme(id)}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-2xl px-3 py-2 text-xs font-semibold transition ${
                 theme === id
-                  ? 'border-brand-500 bg-brand-500 text-white'
-                  : 'border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200'
+                  ? 'bg-obsidian text-limecard'
+                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -170,8 +170,8 @@ export function SettingsView({
       </section>
 
       {/* 1. PROFIL & PERIODE */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 dark:bg-stone-900 dark:border-stone-800 space-y-3">
-        <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">Profil & Periode Custom</h2>
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-3">
+        <h2 className="text-sm font-semibold text-obsidian">Profil & Periode Custom</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="block">
             <span className="text-xs font-medium text-stone-600">Tipe Profil</span>
@@ -216,7 +216,7 @@ export function SettingsView({
       </section>
 
       {/* 2. AKUN & SINKRONISASI SUPABASE */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 space-y-3">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-stone-900">Akun & Sinkronisasi Cloud (Supabase)</h2>
           <button
@@ -297,7 +297,7 @@ export function SettingsView({
       </section>
 
       {/* 3. TAMBAH DOMPET CUSTOM & KATEGORI CUSTOM */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 space-y-4">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-4">
         <h2 className="text-base font-bold text-stone-900">Dompet ({wallets.length}) & Kategori ({categories.length})</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <input
@@ -379,7 +379,7 @@ export function SettingsView({
       </section>
 
       {/* 4. BACKUP EXPORT / IMPORT CSV & JSON */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 space-y-3">
+      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-3">
         <h2 className="text-base font-bold text-stone-900">Cadangan Data (Export & Import)</h2>
         <div className="flex flex-wrap gap-2">
           <button

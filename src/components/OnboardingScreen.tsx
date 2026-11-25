@@ -30,10 +30,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   ];
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
-      <div className="rounded-2xl bg-white p-6 shadow-sm border border-stone-200">
-        <p className="text-sm font-medium text-brand-500">{text.appName}</p>
-        <h1 className="mt-1 text-2xl font-bold text-stone-900">
+    <main className="mx-auto max-w-md px-4 py-8">
+      <div className="surface-paper rounded-[28px] p-6 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">{text.appName}</p>
+        <h1 className="mt-1 text-2xl font-bold text-obsidian">
           Selamat datang. Bagaimana ritme penghasilanmu saat ini?
         </h1>
         <p className="mt-2 text-sm text-stone-600">
@@ -99,7 +99,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-xl bg-brand-500 px-4 py-3 text-base font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+            className="w-full rounded-2xl bg-obsidian px-4 py-3 text-sm font-semibold text-white hover:bg-obsidian-soft disabled:opacity-60"
           >
             {saving ? 'Menyiapkan catatan...' : 'Mulai Catat Keuangan'}
           </button>

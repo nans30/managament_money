@@ -89,12 +89,12 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
     const amount = Number.parseInt(amountStr.replace(/\D/g, ''), 10);
     if (!amount || amount <= 0 || !walletId) {
       setShowDetails(true);
-      setFeedback('Masukkan nominal Rupiah dulu (contoh: "makan 25rb").');
+      setFeedback('Masukkan nominal dulu (contoh: "makan 25rb").');
       return;
     }
     if (type === 'transfer' && walletId === toWalletId) {
       setShowDetails(true);
-      setFeedback('Dompet asal dan tujuan transfer perlu berbeda.');
+      setFeedback('Dompet asal & tujuan transfer perlu berbeda.');
       return;
     }
 
@@ -143,59 +143,60 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
   const typeLabel = type === 'income' ? 'Masuk' : type === 'transfer' ? 'Transfer' : 'Keluar';
 
   return (
-    <section className="rounded-2xl bg-white p-4 border border-stone-200/80 dark:border-stone-800">
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {/* Baris Utama Minimalis: Ketik Natural + Simpan */}
-        <div className="flex gap-2">
+    <section className="overflow-hidden rounded-[28px] bg-obsidian-muted shadow-sm">
+      {/* Baris Folder-Tab khas referensi: tab lime di kiri + bahu gelap di kanan */}
+      <div className="flex items-stretch">
+        <div className="flex items-center gap-2 rounded-tr-[22px] bg-limecard px-5 pt-3.5 pb-1.5 text-xs font-semibold text-obsidian">
+          <ZapIcon className="h-3.5 w-3.5" />
+          <span>Catat cepat</span>
+        </div>
+        <div className="flex flex-1 items-center justify-end gap-2 px-4 py-2">
+          <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-[10px] font-medium text-stone-300">
+            &lt; 5 dtk
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowDetails((v) => !v)}
+            className="min-h-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-white/20"
+          >
+            {showDetails ? 'Tutup' : 'Detail'}
+          </button>
+        </div>
+      </div>
+
+      {/* Isi Kartu Acid Lime */}
+      <form onSubmit={handleSubmit} className="rounded-tr-[24px] bg-limecard px-5 pt-3 pb-5 text-obsidian space-y-3">
+        <div>
           <label htmlFor="natural-input" className="sr-only">
-            Catat cepat transaksi
+            Ketik transaksi dalam bahasa natural
           </label>
           <input
             id="natural-input"
             type="text"
             value={naturalText}
             onChange={(e) => handleNaturalChange(e.target.value)}
-            placeholder='Catat cepat: "makan 25rb", "ngojek 85rb 5jam"...'
-            className="flex-1 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-brand-500 focus:bg-white focus:outline-none"
+            placeholder='Ketik: "makan 25rb", "ngojek 85rb 5jam"...'
+            className="w-full rounded-2xl border-0 bg-white/85 px-4 py-3 text-sm font-medium text-obsidian placeholder:text-stone-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-obsidian/20"
           />
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60"
-          >
-            <ZapIcon className="h-4 w-4" />
-            <span>{saving ? '...' : 'Simpan'}</span>
-          </button>
-        </div>
-
-        {/* Ringkasan Tebakan + Tombol Toggle Detail */}
-        <div className="flex items-center justify-between gap-2 text-xs">
-          <div className="truncate text-stone-500">
+          <div className="mt-1.5 min-h-[18px] px-1 text-xs font-medium text-obsidian/80">
             {parsedPreview && parsedPreview.amount ? (
-              <span className="text-brand-600 font-medium">
-                {typeLabel} · {formatRupiah(parsedPreview.amount)} ·{' '}
+              <span>
+                {typeLabel} · <strong>{formatRupiah(parsedPreview.amount)}</strong> ·{' '}
                 {type === 'expense' ? activeCatName : activeWalletName}
-                {parsedPreview.workHours ? ` · ${parsedPreview.workHours}j` : ''}
+                {parsedPreview.workHours ? ` · ${parsedPreview.workHours} jam` : ''}
               </span>
             ) : feedback ? (
-              <span className="text-brand-600 font-medium">{feedback}</span>
+              <span>{feedback}</span>
             ) : (
-              <span>Otomatis tebak nominal & kategori</span>
+              <span className="text-obsidian/65">Otomatis tebak nominal, kategori & dompet</span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setShowDetails((v) => !v)}
-            className="shrink-0 px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-900"
-          >
-            {showDetails ? 'Tutup detail' : 'Atur detail'}
-          </button>
         </div>
 
-        {/* Panel Detail Manual (Tersembunyi secara default agar layar tetap lega) */}
+        {/* Panel Detail Manual (jika tombol Detail diklik) */}
         {showDetails && (
-          <div className="space-y-3 border-t border-stone-100 pt-3">
-            <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-stone-100 p-1">
+          <div className="space-y-2.5 rounded-2xl bg-white/75 p-3.5 text-obsidian">
+            <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-obsidian/10 p-1">
               {(
                 [
                   { id: 'expense', label: 'Keluar' },
@@ -207,10 +208,8 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
                   key={tab.id}
                   type="button"
                   onClick={() => setType(tab.id)}
-                  className={`rounded-lg py-1.5 text-xs font-medium transition ${
-                    type === tab.id
-                      ? 'bg-white text-stone-900 shadow-sm'
-                      : 'text-stone-500 hover:text-stone-800'
+                  className={`rounded-lg py-1.5 text-xs font-semibold transition ${
+                    type === tab.id ? 'bg-obsidian text-white' : 'text-obsidian/70'
                   }`}
                 >
                   {tab.label}
@@ -220,36 +219,36 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
 
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
-                <span className="text-[11px] text-stone-500">Nominal (Rp)</span>
+                <span className="text-[11px] font-medium text-obsidian/70">Nominal (Rp)</span>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value.replace(/\D/g, ''))}
                   placeholder="25000"
-                  className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold"
+                  className="mt-1 w-full rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm font-semibold text-obsidian"
                 />
               </label>
               <label className="block">
-                <span className="text-[11px] text-stone-500">Tanggal</span>
+                <span className="text-[11px] font-medium text-obsidian/70">Tanggal</span>
                 <input
                   type="date"
                   value={dateStr}
                   onChange={(e) => setDateStr(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
                 />
               </label>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
-                <span className="text-[11px] text-stone-500">
+                <span className="text-[11px] font-medium text-obsidian/70">
                   {type === 'transfer' ? 'Dari Dompet' : 'Dompet'}
                 </span>
                 <select
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
                 >
                   {wallets.map((w) => (
                     <option key={w.id} value={w.id}>
@@ -261,11 +260,11 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
 
               {type === 'transfer' ? (
                 <label className="block">
-                  <span className="text-[11px] text-stone-500">Ke Dompet</span>
+                  <span className="text-[11px] font-medium text-obsidian/70">Ke Dompet</span>
                   <select
                     value={toWalletId}
                     onChange={(e) => setToWalletId(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
                   >
                     {wallets.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -276,7 +275,7 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
                 </label>
               ) : type === 'expense' ? (
                 <label className="block">
-                  <span className="text-[11px] text-stone-500">Kategori</span>
+                  <span className="text-[11px] font-medium text-obsidian/70">Kategori</span>
                   <select
                     value={categoryId}
                     onChange={(e) => {
@@ -285,7 +284,7 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
                       const found = categories.find((c) => c.id === nextId);
                       if (found) setIsJobSearchExpense(found.is_job_search);
                     }}
-                    className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -296,11 +295,11 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
                 </label>
               ) : (
                 <label className="block">
-                  <span className="text-[11px] text-stone-500">Jenis Pemasukan</span>
+                  <span className="text-[11px] font-medium text-obsidian/70">Jenis Pemasukan</span>
                   <select
                     value={incomeNature}
                     onChange={(e) => setIncomeNature(e.target.value as IncomeNature)}
-                    className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
                   >
                     <option value="kerja">Hasil Kerja / Klien</option>
                     <option value="non_kerja">Non-Kerja (Bansos/Kiriman)</option>
@@ -310,15 +309,15 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
             </div>
 
             {type === 'expense' && (
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 <div className="flex gap-1.5">
                   <button
                     type="button"
                     onClick={() => setNeedOrWant('perlu')}
-                    className={`rounded-lg px-3 py-1 text-xs font-medium border ${
+                    className={`rounded-full px-3.5 py-1 text-xs font-semibold ${
                       needOrWant === 'perlu'
-                        ? 'border-brand-500 bg-brand-50 text-brand-700'
-                        : 'border-stone-200 text-stone-500'
+                        ? 'bg-obsidian text-white'
+                        : 'bg-white text-obsidian/70'
                     }`}
                   >
                     Perlu
@@ -326,22 +325,22 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
                   <button
                     type="button"
                     onClick={() => setNeedOrWant('pengen')}
-                    className={`rounded-lg px-3 py-1 text-xs font-medium border ${
+                    className={`rounded-full px-3.5 py-1 text-xs font-semibold ${
                       needOrWant === 'pengen'
-                        ? 'border-warm-500 bg-warm-50 text-warm-700'
-                        : 'border-stone-200 text-stone-500'
+                        ? 'bg-coral text-obsidian'
+                        : 'bg-white text-obsidian/70'
                     }`}
                   >
                     Pengen
                   </button>
                 </div>
 
-                <label className="flex items-center gap-2 text-xs text-stone-600">
+                <label className="flex items-center gap-2 text-xs font-medium text-obsidian/80">
                   <input
                     type="checkbox"
                     checked={isJobSearchExpense}
                     onChange={(e) => setIsJobSearchExpense(e.target.checked)}
-                    className="h-4 w-4 rounded border-stone-300"
+                    className="h-4 w-4 rounded border-obsidian/30"
                   />
                   Modal cari kerja
                 </label>
@@ -355,7 +354,7 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
                   value={sourceOrClient}
                   onChange={(e) => setSourceOrClient(e.target.value)}
                   placeholder="Sumber / Klien"
-                  className="rounded-xl border border-stone-200 px-3 py-2 text-sm"
+                  className="rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
                 />
                 <input
                   type="text"
@@ -363,7 +362,7 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
                   value={workHoursStr}
                   onChange={(e) => setWorkHoursStr(e.target.value)}
                   placeholder="Jam kerja (opsional)"
-                  className="rounded-xl border border-stone-200 px-3 py-2 text-sm"
+                  className="rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
                 />
               </div>
             )}
@@ -373,10 +372,19 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Catatan tambahan (opsional)"
-              className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-obsidian/15 bg-white px-3 py-2 text-sm text-obsidian"
             />
           </div>
         )}
+
+        {/* Tombol CTA Hitam Pekat khas Referensi */}
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full rounded-2xl bg-obsidian px-4 py-3 text-sm font-semibold text-white transition hover:bg-obsidian-soft disabled:opacity-60"
+        >
+          {saving ? 'Menyimpan...' : 'Simpan transaksi'}
+        </button>
       </form>
     </section>
   );
