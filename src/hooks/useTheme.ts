@@ -17,6 +17,7 @@ function applyThemeClass(mode: ThemeMode) {
   if (typeof document === 'undefined') return;
   const isDark = resolveIsDark(mode);
   document.documentElement.classList.toggle('dark', isDark);
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
 }
 
 export function useTheme() {
