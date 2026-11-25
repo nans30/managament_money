@@ -23,6 +23,7 @@ function getLocalDateString(date = new Date()): string {
 
 export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps) {
   const [naturalText, setNaturalText] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
   const [type, setType] = useState<TransactionType>('expense');
   const [amountStr, setAmountStr] = useState('');
   const [walletId, setWalletId] = useState(wallets[0]?.id ?? '');
@@ -49,9 +50,9 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
     return parseNaturalTransaction(naturalText);
   }, [naturalText]);
 
-  // Otomatis isi field saat user mengetik kalimat natural, tapi user tetap bisa mengoreksi manual
   const handleNaturalChange = (val: string) => {
     setNaturalText(val);
+    setFeedback(null);
     if (!val.trim()) return;
     const p = parseNaturalTransaction(val);
     setType(p.type);
@@ -87,10 +88,12 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
     e.preventDefault();
     const amount = Number.parseInt(amountStr.replace(/\D/g, ''), 10);
     if (!amount || amount <= 0 || !walletId) {
-      setFeedback('Masukkan nominal Rupiah yang valid dulu ya.');
+      setShowDetails(true);
+      setFeedback('Masukkan nominal Rupiah dulu (contoh: "makan 25rb").');
       return;
     }
     if (type === 'transfer' && walletId === toWalletId) {
+      setShowDetails(true);
       setFeedback('Dompet asal dan tujuan transfer perlu berbeda.');
       return;
     }
@@ -109,7 +112,6 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
       nowTime.getMinutes(),
       nowTime.getSeconds()
     );
-    const isoDate = localDate.toISOString();
 
     await onSave({
       type,
@@ -123,7 +125,7 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
       income_nature: type === 'income' ? incomeNature : 'kerja',
       is_job_search_expense: type === 'expense' ? isJobSearchExpense : false,
       note: note.trim() || naturalText.trim() || '-',
-      date: isoDate,
+      date: localDate.toISOString(),
     });
 
     setNaturalText('');
@@ -133,245 +135,248 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
     setNote('');
     setIsJobSearchExpense(false);
     setSaving(false);
-    setFeedback(`Tersimpan (${formatRupiah(amount)}).`);
+    setFeedback(`Tersimpan · ${formatRupiah(amount)}`);
   };
 
-  return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200">
-      <div className="flex items-center justify-between">
-        <h2 className="inline-flex items-center gap-1.5 text-base font-bold text-stone-900">
-          <ZapIcon className="h-4 w-4 text-brand-500" />
-          <span>Catat Cepat</span>
-        </h2>
-        <span className="text-xs text-stone-500">Target &lt; 5 detik</span>
-      </div>
+  const activeWalletName = wallets.find((w) => w.id === walletId)?.name ?? 'Dompet';
+  const activeCatName = categories.find((c) => c.id === categoryId)?.name ?? 'Kategori';
+  const typeLabel = type === 'income' ? 'Masuk' : type === 'transfer' ? 'Transfer' : 'Keluar';
 
-      <form onSubmit={handleSubmit} className="mt-3 space-y-3">
-        {/* Input Bahasa Natural */}
-        <div>
+  return (
+    <section className="rounded-2xl bg-white p-4 border border-stone-200/80 dark:border-stone-800">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Baris Utama Minimalis: Ketik Natural + Simpan */}
+        <div className="flex gap-2">
           <label htmlFor="natural-input" className="sr-only">
-            Ketik transaksi dalam bahasa natural
+            Catat cepat transaksi
           </label>
           <input
             id="natural-input"
             type="text"
             value={naturalText}
             onChange={(e) => handleNaturalChange(e.target.value)}
-            placeholder='Ketik cepat: "makan siang 25rb", "ngojek 85rb 5jam", "transfer ke gopay 100rb"'
-            className="w-full rounded-xl border border-brand-500/40 bg-brand-50/40 px-3 py-3 text-base text-stone-900 placeholder:text-stone-500 focus:border-brand-500 focus:outline-none"
+            placeholder='Catat cepat: "makan 25rb", "ngojek 85rb 5jam"...'
+            className="flex-1 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-brand-500 focus:bg-white focus:outline-none"
           />
-          {parsedPreview && parsedPreview.amount && (
-            <p className="mt-1 text-xs text-brand-600">
-              Tebakan: <strong>{parsedPreview.type}</strong> · {formatRupiah(parsedPreview.amount)}
-              {parsedPreview.guessedCategoryName ? ` · ${parsedPreview.guessedCategoryName}` : ''}
-              {parsedPreview.workHours ? ` · ${parsedPreview.workHours} jam` : ''} (bisa dikoreksi di bawah)
-            </p>
-          )}
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60"
+          >
+            <ZapIcon className="h-4 w-4" />
+            <span>{saving ? '...' : 'Simpan'}</span>
+          </button>
         </div>
 
-        {/* Pilihan Tipe Transaksi */}
-        <div className="grid grid-cols-3 gap-2">
-          {(
-            [
-              { id: 'expense', label: 'Keluar' },
-              { id: 'income', label: 'Masuk' },
-              { id: 'transfer', label: 'Transfer' },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setType(tab.id)}
-              className={`rounded-xl px-3 py-2 text-sm font-semibold border ${
-                type === tab.id
-                  ? 'border-brand-500 bg-brand-500 text-white'
-                  : 'border-stone-200 bg-stone-50 text-stone-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Ringkasan Tebakan + Tombol Toggle Detail */}
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <div className="truncate text-stone-500">
+            {parsedPreview && parsedPreview.amount ? (
+              <span className="text-brand-600 font-medium">
+                {typeLabel} · {formatRupiah(parsedPreview.amount)} ·{' '}
+                {type === 'expense' ? activeCatName : activeWalletName}
+                {parsedPreview.workHours ? ` · ${parsedPreview.workHours}j` : ''}
+              </span>
+            ) : feedback ? (
+              <span className="text-brand-600 font-medium">{feedback}</span>
+            ) : (
+              <span>Otomatis tebak nominal & kategori</span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDetails((v) => !v)}
+            className="shrink-0 px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-900"
+          >
+            {showDetails ? 'Tutup detail' : 'Atur detail'}
+          </button>
         </div>
 
-        {/* Nominal & Tanggal */}
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="text-xs font-medium text-stone-600">Nominal (Rp)</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={amountStr}
-              onChange={(e) => setAmountStr(e.target.value.replace(/\D/g, ''))}
-              placeholder="25000"
-              className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-base font-semibold"
-              required
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-stone-600">Tanggal</span>
-            <input
-              type="date"
-              value={dateStr}
-              onChange={(e) => setDateStr(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
-            />
-          </label>
-        </div>
-
-        {/* Dompet & Kategori / Dompet Tujuan */}
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="text-xs font-medium text-stone-600">
-              {type === 'transfer' ? 'Dari Dompet' : 'Dompet'}
-            </span>
-            <select
-              value={walletId}
-              onChange={(e) => setWalletId(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-            >
-              {wallets.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
+        {/* Panel Detail Manual (Tersembunyi secara default agar layar tetap lega) */}
+        {showDetails && (
+          <div className="space-y-3 border-t border-stone-100 pt-3">
+            <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-stone-100 p-1">
+              {(
+                [
+                  { id: 'expense', label: 'Keluar' },
+                  { id: 'income', label: 'Masuk' },
+                  { id: 'transfer', label: 'Transfer' },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setType(tab.id)}
+                  className={`rounded-lg py-1.5 text-xs font-medium transition ${
+                    type === tab.id
+                      ? 'bg-white text-stone-900 shadow-sm'
+                      : 'text-stone-500 hover:text-stone-800'
+                  }`}
+                >
+                  {tab.label}
+                </button>
               ))}
-            </select>
-          </label>
-
-          {type === 'transfer' ? (
-            <label className="block">
-              <span className="text-xs font-medium text-stone-600">Ke Dompet</span>
-              <select
-                value={toWalletId}
-                onChange={(e) => setToWalletId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-              >
-                {wallets.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : type === 'expense' ? (
-            <label className="block">
-              <span className="text-xs font-medium text-stone-600">Kategori</span>
-              <select
-                value={categoryId}
-                onChange={(e) => {
-                  const nextId = e.target.value;
-                  setCategoryId(nextId);
-                  const found = categories.find((c) => c.id === nextId);
-                  if (found) setIsJobSearchExpense(found.is_job_search);
-                }}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <label className="block">
-              <span className="text-xs font-medium text-stone-600">Jenis Pemasukan</span>
-              <select
-                value={incomeNature}
-                onChange={(e) => setIncomeNature(e.target.value as IncomeNature)}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="kerja">Hasil Kerja / Klien</option>
-                <option value="non_kerja">Non-Kerja (Bansos/Kiriman/Prakerja)</option>
-              </select>
-            </label>
-          )}
-        </div>
-
-        {/* Field Tambahan Pengeluaran: Perlu vs Pengen + Modal Cari Kerja */}
-        {type === 'expense' && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setNeedOrWant('perlu')}
-                className={`rounded-lg px-3 py-1 text-xs font-semibold border ${
-                  needOrWant === 'perlu'
-                    ? 'border-brand-500 bg-brand-100 text-brand-700'
-                    : 'border-stone-200 text-stone-600'
-                }`}
-              >
-                Perlu
-              </button>
-              <button
-                type="button"
-                onClick={() => setNeedOrWant('pengen')}
-                className={`rounded-lg px-3 py-1 text-xs font-semibold border ${
-                  needOrWant === 'pengen'
-                    ? 'border-warm-500 bg-warm-100 text-warm-700'
-                    : 'border-stone-200 text-stone-600'
-                }`}
-              >
-                Pengen
-              </button>
             </div>
 
-            <label className="flex items-center gap-2 text-xs text-stone-700">
-              <input
-                type="checkbox"
-                checked={isJobSearchExpense}
-                onChange={(e) => setIsJobSearchExpense(e.target.checked)}
-                className="h-4 w-4 rounded border-stone-300"
-              />
-              Modal cari kerja
-            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="text-[11px] text-stone-500">Nominal (Rp)</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={amountStr}
+                  onChange={(e) => setAmountStr(e.target.value.replace(/\D/g, ''))}
+                  placeholder="25000"
+                  className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[11px] text-stone-500">Tanggal</span>
+                <input
+                  type="date"
+                  value={dateStr}
+                  onChange={(e) => setDateStr(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="text-[11px] text-stone-500">
+                  {type === 'transfer' ? 'Dari Dompet' : 'Dompet'}
+                </span>
+                <select
+                  value={walletId}
+                  onChange={(e) => setWalletId(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                >
+                  {wallets.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {type === 'transfer' ? (
+                <label className="block">
+                  <span className="text-[11px] text-stone-500">Ke Dompet</span>
+                  <select
+                    value={toWalletId}
+                    onChange={(e) => setToWalletId(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                  >
+                    {wallets.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : type === 'expense' ? (
+                <label className="block">
+                  <span className="text-[11px] text-stone-500">Kategori</span>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => {
+                      const nextId = e.target.value;
+                      setCategoryId(nextId);
+                      const found = categories.find((c) => c.id === nextId);
+                      if (found) setIsJobSearchExpense(found.is_job_search);
+                    }}
+                    className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <label className="block">
+                  <span className="text-[11px] text-stone-500">Jenis Pemasukan</span>
+                  <select
+                    value={incomeNature}
+                    onChange={(e) => setIncomeNature(e.target.value as IncomeNature)}
+                    className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                  >
+                    <option value="kerja">Hasil Kerja / Klien</option>
+                    <option value="non_kerja">Non-Kerja (Bansos/Kiriman)</option>
+                  </select>
+                </label>
+              )}
+            </div>
+
+            {type === 'expense' && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setNeedOrWant('perlu')}
+                    className={`rounded-lg px-3 py-1 text-xs font-medium border ${
+                      needOrWant === 'perlu'
+                        ? 'border-brand-500 bg-brand-50 text-brand-700'
+                        : 'border-stone-200 text-stone-500'
+                    }`}
+                  >
+                    Perlu
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNeedOrWant('pengen')}
+                    className={`rounded-lg px-3 py-1 text-xs font-medium border ${
+                      needOrWant === 'pengen'
+                        ? 'border-warm-500 bg-warm-50 text-warm-700'
+                        : 'border-stone-200 text-stone-500'
+                    }`}
+                  >
+                    Pengen
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-2 text-xs text-stone-600">
+                  <input
+                    type="checkbox"
+                    checked={isJobSearchExpense}
+                    onChange={(e) => setIsJobSearchExpense(e.target.checked)}
+                    className="h-4 w-4 rounded border-stone-300"
+                  />
+                  Modal cari kerja
+                </label>
+              </div>
+            )}
+
+            {type === 'income' && (
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={sourceOrClient}
+                  onChange={(e) => setSourceOrClient(e.target.value)}
+                  placeholder="Sumber / Klien"
+                  className="rounded-xl border border-stone-200 px-3 py-2 text-sm"
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={workHoursStr}
+                  onChange={(e) => setWorkHoursStr(e.target.value)}
+                  placeholder="Jam kerja (opsional)"
+                  className="rounded-xl border border-stone-200 px-3 py-2 text-sm"
+                />
+              </div>
+            )}
+
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Catatan tambahan (opsional)"
+              className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm"
+            />
           </div>
         )}
-
-        {/* Field Tambahan Pemasukan: Sumber/Klien & Jam Kerja */}
-        {type === 'income' && (
-          <div className="grid grid-cols-2 gap-2">
-            <label className="block">
-              <span className="text-xs font-medium text-stone-600">Sumber / Jenis Kerja / Klien</span>
-              <input
-                type="text"
-                value={sourceOrClient}
-                onChange={(e) => setSourceOrClient(e.target.value)}
-                placeholder="Ngojek / PT Maju"
-                className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs font-medium text-stone-600">Lama Kerja (Jam, opsional)</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={workHoursStr}
-                onChange={(e) => setWorkHoursStr(e.target.value)}
-                placeholder="Contoh: 5"
-                className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
-        )}
-
-        {/* Catatan Singkat */}
-        <input
-          type="text"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Catatan tambahan (opsional)"
-          className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
-        />
-
-        {feedback && <p className="text-sm font-medium text-brand-600">{feedback}</p>}
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full rounded-xl bg-brand-500 px-4 py-3 text-base font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
-        >
-          {saving ? 'Menyimpan...' : 'Simpan Transaksi'}
-        </button>
       </form>
     </section>
   );

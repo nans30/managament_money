@@ -60,37 +60,35 @@ export default function HomePage() {
   const categoryById = new Map(state.categories.map((c) => [c.id, c.name]));
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-4">
-      {/* Header Status Offline-First & Toggle Tema */}
-      <header className="mb-4 flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100">{text.appName}</h1>
-          <p className="text-xs text-stone-500 dark:text-stone-400">
-            {state.isOnline ? 'Online · Tersimpan di perangkat' : 'Mode Offline · Tetap bisa mencatat'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleLightDark}
-            aria-label={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-            title={isDark ? 'Mode Terang' : 'Mode Gelap'}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
-          >
-            {isDark ? <SunIcon className="h-4 w-4 text-amber-400" /> : <MoonIcon className="h-4 w-4 text-stone-700" />}
-            <span>{isDark ? 'Terang' : 'Gelap'}</span>
-          </button>
+    <div className="mx-auto max-w-lg px-4 pt-5">
+      {/* Header Minimalis */}
+      <header className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-base font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+            {text.appName}
+          </h1>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
-              state.isOnline
-                ? 'bg-brand-100 text-brand-700 dark:bg-emerald-950 dark:text-emerald-300'
-                : 'bg-warm-100 text-warm-700 dark:bg-amber-950 dark:text-amber-300'
-            }`}
+            title={state.isOnline ? 'Online · Sinkronisasi siap' : 'Mode Offline'}
+            className="inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400"
           >
-            {state.isOnline ? <WifiIcon className="h-3.5 w-3.5" /> : <WifiOffIcon className="h-3.5 w-3.5" />}
-            {state.isOnline ? 'Online' : 'Offline'}
+            {state.isOnline ? (
+              <WifiIcon className="h-3.5 w-3.5 text-brand-500 dark:text-emerald-400" />
+            ) : (
+              <WifiOffIcon className="h-3.5 w-3.5 text-warm-500" />
+            )}
+            <span className="sr-only">{state.isOnline ? 'Online' : 'Offline'}</span>
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={toggleLightDark}
+          aria-label={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+          title={isDark ? 'Mode Terang' : 'Mode Gelap'}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-stone-200/80 bg-white text-stone-700 hover:bg-stone-100 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
+        >
+          {isDark ? <SunIcon className="h-4 w-4 text-amber-400" /> : <MoonIcon className="h-4 w-4" />}
+        </button>
       </header>
 
       {/* Konten Utama */}
@@ -218,19 +216,19 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Navigasi Bawah Ramah Satu Tangan (Target sentuh >= 44px) */}
+      {/* Navigasi Bawah Minimalis Ramah Satu Tangan */}
       <nav
         aria-label="Navigasi utama"
-        className="fixed bottom-0 left-0 right-0 z-20 border-t border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-stone-950/95"
+        className="fixed bottom-0 left-0 right-0 z-20 border-t border-stone-200/70 bg-white/90 backdrop-blur-md dark:border-stone-800/80 dark:bg-stone-950/90"
       >
-        <div className="mx-auto grid max-w-2xl grid-cols-5">
+        <div className="mx-auto grid max-w-lg grid-cols-5">
           {(
             [
-              { id: 'dashboard', label: text.nav.dashboard, Icon: HomeIcon },
-              { id: 'transactions', label: text.nav.transactions, Icon: ListIcon },
-              { id: 'profile', label: text.nav.profileFeatures, Icon: BriefcaseIcon },
-              { id: 'planning', label: text.nav.planning, Icon: TargetIcon },
-              { id: 'settings', label: text.nav.settings, Icon: SettingsIcon },
+              { id: 'dashboard', label: 'Beranda', Icon: HomeIcon },
+              { id: 'transactions', label: 'Riwayat', Icon: ListIcon },
+              { id: 'profile', label: 'Profil', Icon: BriefcaseIcon },
+              { id: 'planning', label: 'Rencana', Icon: TargetIcon },
+              { id: 'settings', label: 'Atur', Icon: SettingsIcon },
             ] as const
           ).map(({ id, label, Icon }) => {
             const active = tab === id;
@@ -239,13 +237,13 @@ export default function HomePage() {
                 key={id}
                 type="button"
                 onClick={() => setTab(id)}
-                className={`flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold ${
+                className={`flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors ${
                   active
-                    ? 'text-brand-600 border-t-2 border-brand-500 dark:text-emerald-400 dark:border-emerald-400'
-                    : 'text-stone-500 dark:text-stone-400'
+                    ? 'text-brand-600 dark:text-emerald-400'
+                    : 'text-stone-400 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300'
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-[18px] w-[18px]" />
                 <span>{label}</span>
               </button>
             );
