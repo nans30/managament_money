@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { ZapIcon } from '@/components/Icons';
 import { formatRupiah } from '@/lib/format';
 import { parseNaturalTransaction } from '@/lib/natural-parser';
 import type { Category, IncomeNature, NeedOrWant, Transaction, TransactionType, Wallet } from '@/lib/types';
@@ -138,7 +139,10 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
   return (
     <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold text-stone-900">Catat Cepat</h2>
+        <h2 className="inline-flex items-center gap-1.5 text-base font-bold text-stone-900">
+          <ZapIcon className="h-4 w-4 text-brand-500" />
+          <span>Catat Cepat</span>
+        </h2>
         <span className="text-xs text-stone-500">Target &lt; 5 detik</span>
       </div>
 

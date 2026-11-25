@@ -12,6 +12,7 @@ import {
   signOutUser,
   signUpWithEmail,
 } from '@/lib/supabase';
+import { MonitorIcon, MoonIcon, SunIcon } from '@/components/Icons';
 import type { ThemeMode } from '@/hooks/useTheme';
 import type { AppBackup, Category, Profile, ProfileType, Transaction, Wallet } from '@/lib/types';
 
@@ -146,22 +147,23 @@ export function SettingsView({
         <div className="grid grid-cols-3 gap-2">
           {(
             [
-              { id: 'system', label: 'Ikuti Sistem' },
-              { id: 'light', label: 'Mode Terang' },
-              { id: 'dark', label: 'Mode Gelap' },
+              { id: 'system', label: 'Sistem', Icon: MonitorIcon },
+              { id: 'light', label: 'Terang', Icon: SunIcon },
+              { id: 'dark', label: 'Gelap', Icon: MoonIcon },
             ] as const
-          ).map((opt) => (
+          ).map(({ id, label, Icon }) => (
             <button
-              key={opt.id}
+              key={id}
               type="button"
-              onClick={() => onChangeTheme(opt.id)}
-              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
-                theme === opt.id
+              onClick={() => onChangeTheme(id)}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                theme === id
                   ? 'border-brand-500 bg-brand-500 text-white'
                   : 'border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200'
               }`}
             >
-              {opt.label}
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
             </button>
           ))}
         </div>

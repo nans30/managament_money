@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { LightbulbIcon, ShieldIcon, WalletIcon } from '@/components/Icons';
 import {
   calculateCategoryBudgets,
   calculateNeedVsWantSummary,
@@ -171,16 +172,20 @@ export function DashboardView({
           <button
             type="button"
             onClick={() => void onToggleEmergencyMode()}
-            className="rounded-lg bg-white/20 px-3 py-1 font-semibold text-white hover:bg-white/30"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1 font-semibold text-white hover:bg-white/30"
           >
-            {profile.emergency_mode ? 'Matikan Mode Hemat' : 'Mode Hemat'}
+            <ShieldIcon className="h-3.5 w-3.5" />
+            <span>{profile.emergency_mode ? 'Matikan Mode Hemat' : 'Mode Hemat'}</span>
           </button>
         </div>
       </section>
 
       {/* Daftar Saldo Per Dompet */}
       <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200">
-        <h3 className="text-sm font-bold text-stone-800">Dompet</h3>
+        <h3 className="inline-flex items-center gap-1.5 text-sm font-bold text-stone-800">
+          <WalletIcon className="h-4 w-4 text-brand-500" />
+          <span>Dompet</span>
+        </h3>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {wallets.map((w) => (
             <div key={w.id} className="rounded-xl border border-stone-200 bg-stone-50 p-3">
@@ -270,7 +275,10 @@ export function DashboardView({
       {/* Insight Otomatis */}
       {insights.length > 0 && (
         <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200">
-          <h3 className="text-sm font-bold text-stone-800">Catatan & Insight</h3>
+          <h3 className="inline-flex items-center gap-1.5 text-sm font-bold text-stone-800">
+            <LightbulbIcon className="h-4 w-4 text-warm-500" />
+            <span>Catatan & Insight</span>
+          </h3>
           <ul className="mt-2 space-y-2 text-sm text-stone-700">
             {insights.map((msg, idx) => (
               <li key={idx} className="rounded-xl bg-stone-50 p-3">

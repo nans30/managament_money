@@ -2,6 +2,17 @@
 
 import { useState } from 'react';
 import { DashboardView } from '@/components/DashboardView';
+import {
+  BriefcaseIcon,
+  HomeIcon,
+  ListIcon,
+  MoonIcon,
+  SettingsIcon,
+  SunIcon,
+  TargetIcon,
+  WifiIcon,
+  WifiOffIcon,
+} from '@/components/Icons';
 import { OnboardingScreen } from '@/components/OnboardingScreen';
 import { PlanningView } from '@/components/PlanningView';
 import { ProfileFeaturesView } from '@/components/ProfileFeaturesView';
@@ -63,17 +74,20 @@ export default function HomePage() {
             type="button"
             onClick={toggleLightDark}
             aria-label={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-            className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
+            title={isDark ? 'Mode Terang' : 'Mode Gelap'}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
           >
-            {isDark ? 'Terang' : 'Gelap'}
+            {isDark ? <SunIcon className="h-4 w-4 text-amber-400" /> : <MoonIcon className="h-4 w-4 text-stone-700" />}
+            <span>{isDark ? 'Terang' : 'Gelap'}</span>
           </button>
           <span
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
               state.isOnline
                 ? 'bg-brand-100 text-brand-700 dark:bg-emerald-950 dark:text-emerald-300'
                 : 'bg-warm-100 text-warm-700 dark:bg-amber-950 dark:text-amber-300'
             }`}
           >
+            {state.isOnline ? <WifiIcon className="h-3.5 w-3.5" /> : <WifiOffIcon className="h-3.5 w-3.5" />}
             {state.isOnline ? 'Online' : 'Offline'}
           </span>
         </div>
@@ -212,26 +226,27 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-2xl grid-cols-5">
           {(
             [
-              { id: 'dashboard', label: text.nav.dashboard },
-              { id: 'transactions', label: text.nav.transactions },
-              { id: 'profile', label: text.nav.profileFeatures },
-              { id: 'planning', label: text.nav.planning },
-              { id: 'settings', label: text.nav.settings },
+              { id: 'dashboard', label: text.nav.dashboard, Icon: HomeIcon },
+              { id: 'transactions', label: text.nav.transactions, Icon: ListIcon },
+              { id: 'profile', label: text.nav.profileFeatures, Icon: BriefcaseIcon },
+              { id: 'planning', label: text.nav.planning, Icon: TargetIcon },
+              { id: 'settings', label: text.nav.settings, Icon: SettingsIcon },
             ] as const
-          ).map((item) => {
-            const active = tab === item.id;
+          ).map(({ id, label, Icon }) => {
+            const active = tab === id;
             return (
               <button
-                key={item.id}
+                key={id}
                 type="button"
-                onClick={() => setTab(item.id)}
-                className={`flex flex-col items-center justify-center py-2.5 text-[11px] font-semibold ${
+                onClick={() => setTab(id)}
+                className={`flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold ${
                   active
                     ? 'text-brand-600 border-t-2 border-brand-500 dark:text-emerald-400 dark:border-emerald-400'
                     : 'text-stone-500 dark:text-stone-400'
                 }`}
               >
-                {item.label}
+                <Icon className="h-4 w-4" />
+                <span>{label}</span>
               </button>
             );
           })}
