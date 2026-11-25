@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
+      },
       colors: {
         // Warna hangat dan netral, tanpa merah agresif untuk uang tipis
         brand: {
