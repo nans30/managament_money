@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getAllLocalRecords,
   readFullLocalSnapshot,
@@ -53,10 +53,11 @@ export interface AppDataState {
 const LOCAL_GUEST_USER_ID = '00000000-0000-4000-8000-000000000000';
 
 export function useFinanceStore() {
+  const syncInFlightRef = useRef(false);
   const [state, setState] = useState<AppDataState>({
     loading: true,
     error: null,
-    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    isOnline: true,
     supabaseReady: isSupabaseConfigured(),
     authUserId: null,
     authEmail: null,
@@ -121,16 +122,25 @@ export function useFinanceStore() {
   }, []);
 
   const triggerSync = useCallback(async () => {
+    if (syncInFlightRef.current) return null;
+    syncInFlightRef.current = true;
     setState((prev) => ({ ...prev, syncing: true }));
-    const result = await syncWithSupabase();
-    setState((prev) => ({ ...prev, syncing: false, syncStatus: result }));
-    if (result.pulledCount > 0) {
-      await loadLocalData();
+    try {
+      const result = await syncWithSupabase();
+      setState((prev) => ({ ...prev, syncing: false, syncStatus: result }));
+      if (result.pulledCount > 0) {
+        await loadLocalData();
+      }
+      return result;
+    } finally {
+      syncInFlightRef.current = false;
     }
-    return result;
   }, [loadLocalData]);
 
   useEffect(() => {
+    // Sinkronkan status online aktual di klien setelah mount (hindari SSR hydration mismatch)
+    setState((prev) => ({ ...prev, isOnline: navigator.onLine }));
+
     // Daftarkan Service Worker PWA untuk dukungan offline penuh
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {

@@ -145,6 +145,17 @@ export async function softDeleteLocalRecord<T extends TableName>(
 }
 
 /**
+ * Membaca satu record berdasarkan ID secara langsung (O(1) lookup, tanpa full-table scan).
+ */
+export async function getLocalRecordById<T extends TableName>(
+  table: T,
+  recordId: string
+): Promise<LocalRecordMap[T] | undefined> {
+  const db = await getLocalDB();
+  return (await db.get(table, recordId)) as LocalRecordMap[T] | undefined;
+}
+
+/**
  * Membaca semua record aktif (deleted_at === null) atau seluruh record termasuk soft-deleted.
  */
 export async function getAllLocalRecords<T extends TableName>(

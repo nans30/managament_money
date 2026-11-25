@@ -3,13 +3,35 @@ import {
   clearSyncQueueItem,
   getAllLocalRecords,
   getLastSyncedAt,
+  getLocalRecordById,
   getSyncQueue,
   setLastSyncedAt,
   upsertLocalRecord,
   type LocalRecordMap,
+  type SyncQueueItem,
   type TableName,
 } from './db';
 import { getSupabaseClient } from './supabase';
+
+/**
+ * Urutan sinkronisasi sesuai ketergantungan Foreign Key Postgres:
+ * `wallets` dan `categories` WAJIB dikirim sebelum `transactions`
+ * agar tidak terjadi Foreign Key Violation (`transactions_wallet_id_fkey`).
+ */
+const TABLE_SYNC_PRIORITY: Record<TableName, number> = {
+  profiles: 0,
+  wallets: 1,
+  categories: 2,
+  transactions: 3,
+  recurring_bills: 4,
+  debts: 5,
+  goals: 6,
+  invoices: 7,
+};
+
+export function sortSyncQueueByDependency(queue: SyncQueueItem[]): SyncQueueItem[] {
+  return [...queue].sort((a, b) => TABLE_SYNC_PRIORITY[a.table] - TABLE_SYNC_PRIORITY[b.table]);
+}
 
 export interface TimestampedRecord {
   id: string;
@@ -79,11 +101,10 @@ export async function syncWithSupabase(): Promise<SyncResult> {
   let pulledCount = 0;
 
   try {
-    // 1. PUSH antrean offline ke Supabase
-    const queue = await getSyncQueue();
+    // 1. PUSH antrean offline ke Supabase sesuai urutan Foreign Key (O(1) lookup per record)
+    const queue = sortSyncQueueByDependency(await getSyncQueue());
     for (const item of queue) {
-      const localRows = await getAllLocalRecords(item.table, true);
-      const record = localRows.find((r) => r.id === item.record_id);
+      const record = await getLocalRecordById(item.table, item.record_id);
       if (!record) {
         await clearSyncQueueItem(item.id);
         continue;
@@ -91,7 +112,8 @@ export async function syncWithSupabase(): Promise<SyncResult> {
 
       // Pastikan user_id mengikuti auth.uid() yang sedang login agar sesuai RLS
       const payload = { ...record, user_id: user.id } as Record<string, unknown>;
-      const { error } = await supabase.from(item.table).upsert(payload, { onConflict: 'id' });
+      const conflictCol = item.table === 'profiles' ? 'user_id' : 'id';
+      const { error } = await supabase.from(item.table).upsert(payload, { onConflict: conflictCol });
       if (error) {
         throw new Error(`Gagal sync tabel ${item.table}: ${error.message}`);
       }

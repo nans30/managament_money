@@ -13,6 +13,13 @@ interface QuickAddFormProps {
   ) => Promise<unknown>;
 }
 
+function getLocalDateString(date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps) {
   const [naturalText, setNaturalText] = useState('');
   const [type, setType] = useState<TransactionType>('expense');
@@ -26,7 +33,7 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
   const [incomeNature, setIncomeNature] = useState<IncomeNature>('kerja');
   const [isJobSearchExpense, setIsJobSearchExpense] = useState(false);
   const [note, setNote] = useState('');
-  const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateStr, setDateStr] = useState(() => getLocalDateString());
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -52,8 +59,8 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
     setIncomeNature(p.incomeNature);
     setIsJobSearchExpense(p.isJobSearchExpense);
     setNote(p.note);
-    if (p.sourceOrClient) setSourceOrClient(p.sourceOrClient);
-    if (p.workHours) setWorkHoursStr(String(p.workHours));
+    setSourceOrClient(p.sourceOrClient ?? '');
+    setWorkHoursStr(p.workHours ? String(p.workHours) : '');
 
     if (p.guessedWalletName) {
       const matchedWallet = wallets.find(
@@ -91,7 +98,17 @@ export function QuickAddForm({ wallets, categories, onSave }: QuickAddFormProps)
     setFeedback(null);
 
     const parsedHours = workHoursStr ? Number.parseFloat(workHoursStr.replace(',', '.')) : null;
-    const isoDate = new Date(`${dateStr}T${new Date().toISOString().slice(11)}`).toISOString();
+    const nowTime = new Date();
+    const [yearStr, monthStr, dayStr] = dateStr.split('-');
+    const localDate = new Date(
+      Number(yearStr) || nowTime.getFullYear(),
+      (Number(monthStr) || nowTime.getMonth() + 1) - 1,
+      Number(dayStr) || nowTime.getDate(),
+      nowTime.getHours(),
+      nowTime.getMinutes(),
+      nowTime.getSeconds()
+    );
+    const isoDate = localDate.toISOString();
 
     await onSave({
       type,

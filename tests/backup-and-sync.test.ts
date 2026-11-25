@@ -5,7 +5,7 @@ import {
   parseBackupFromJson,
   serializeBackupToJson,
 } from '@/lib/backup';
-import { resolveLWWConflict } from '@/lib/sync';
+import { resolveLWWConflict, sortSyncQueueByDependency } from '@/lib/sync';
 import type { AppBackup, Transaction } from '@/lib/types';
 
 const userId = '11111111-1111-4111-8111-111111111111';
@@ -105,5 +105,21 @@ describe('Resolusi Konflik Last-Write-Wins (LWW)', () => {
 
     expect(resolveLWWConflict(older, newer)).toEqual(newer);
     expect(resolveLWWConflict(newer, older)).toEqual(newer);
+  });
+
+  it('mengurutkan antrean sync agar wallets & categories selalu dikirim sebelum transactions', () => {
+    const sorted = sortSyncQueueByDependency([
+      { id: 'transactions:1', table: 'transactions', record_id: '1', queued_at: now },
+      { id: 'wallets:1', table: 'wallets', record_id: '1', queued_at: now },
+      { id: 'categories:1', table: 'categories', record_id: '1', queued_at: now },
+      { id: 'profiles:1', table: 'profiles', record_id: '1', queued_at: now },
+    ]);
+
+    expect(sorted.map((item) => item.table)).toEqual([
+      'profiles',
+      'wallets',
+      'categories',
+      'transactions',
+    ]);
   });
 });
