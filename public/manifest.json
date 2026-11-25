@@ -1,0 +1,19 @@
+{
+  "name": "DompetTenang - Catatan Keuangan Pribadi",
+  "short_name": "DompetTenang",
+  "description": "Aplikasi catatan keuangan offline-first untuk gaji tetap, freelance, dan serabutan.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8faf9",
+  "theme_color": "#2d6a4f",
+  "orientation": "portrait",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
