@@ -86,6 +86,19 @@ export function getLocalDB(): Promise<IDBPDatabase<MoneyAppDB>> {
           db.createObjectStore('meta', { keyPath: 'key' });
         }
       },
+      blocked() {
+        console.warn('IndexedDB sedang diblokir tab lain.');
+      },
+      blocking(_currentVersion, _blockedVersion, event) {
+        (event.target as IDBDatabase | null)?.close();
+        dbPromise = null;
+      },
+      terminated() {
+        dbPromise = null;
+      },
+    }).catch((err) => {
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;

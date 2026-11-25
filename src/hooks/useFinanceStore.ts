@@ -76,6 +76,18 @@ export function useFinanceStore() {
 
   const loadLocalData = useCallback(async () => {
     try {
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                'Penyimpanan lokal (IndexedDB) terlalu lama merespons. Coba tutup tab lain atau muat ulang halaman.'
+              )
+            ),
+          6000
+        )
+      );
+
       const [
         profiles,
         wallets,
@@ -85,15 +97,18 @@ export function useFinanceStore() {
         debts,
         goals,
         invoices,
-      ] = await Promise.all([
-        getAllLocalRecords('profiles'),
-        getAllLocalRecords('wallets'),
-        getAllLocalRecords('categories'),
-        getAllLocalRecords('transactions'),
-        getAllLocalRecords('recurring_bills'),
-        getAllLocalRecords('debts'),
-        getAllLocalRecords('goals'),
-        getAllLocalRecords('invoices'),
+      ] = await Promise.race([
+        Promise.all([
+          getAllLocalRecords('profiles'),
+          getAllLocalRecords('wallets'),
+          getAllLocalRecords('categories'),
+          getAllLocalRecords('transactions'),
+          getAllLocalRecords('recurring_bills'),
+          getAllLocalRecords('debts'),
+          getAllLocalRecords('goals'),
+          getAllLocalRecords('invoices'),
+        ]),
+        timeoutPromise,
       ]);
 
       transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -141,11 +156,21 @@ export function useFinanceStore() {
     // Sinkronkan status online aktual di klien setelah mount (hindari SSR hydration mismatch)
     setState((prev) => ({ ...prev, isOnline: navigator.onLine }));
 
-    // Daftarkan Service Worker PWA untuk dukungan offline penuh
+    // Daftarkan Service Worker PWA HANYA di production.
+    // Di localhost/development, hapus SW lama agar chunk dev Next.js tidak pernah bentrok/stuck.
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
-        // Abaikan jika gagal di mode dev / browser tanpa SW
-      });
+      const isLocalhost =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (process.env.NODE_ENV === 'production' && !isLocalhost) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+          // Abaikan jika gagal di browser tanpa SW
+        });
+      } else {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+          .catch(() => {});
+      }
     }
 
     const handleOnline = () => {
