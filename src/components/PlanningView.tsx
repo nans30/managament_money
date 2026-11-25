@@ -34,20 +34,17 @@ export function PlanningView({
   onAddGoal,
   onAddGoalProgress,
 }: PlanningViewProps) {
-  // State Tagihan Berulang / Cicilan
   const [billName, setBillName] = useState('');
   const [billAmount, setBillAmount] = useState('');
   const [billDue, setBillDue] = useState(() => new Date().toISOString().slice(0, 10));
   const [billTotalInst, setBillTotalInst] = useState('');
 
-  // State Utang / Piutang
   const [debtDirection, setDebtDirection] = useState<'utang' | 'piutang'>('utang');
   const [debtParty, setDebtParty] = useState('');
   const [debtCat, setDebtCat] = useState<DebtCategory>('warung');
   const [debtAmount, setDebtAmount] = useState('');
   const [partialInputs, setPartialInputs] = useState<Record<string, string>>({});
 
-  // State Target Tabungan / Dana Darurat
   const [goalName, setGoalName] = useState('');
   const [goalTarget, setGoalTarget] = useState('');
   const [goalPlan, setGoalPlan] = useState('');
@@ -111,204 +108,233 @@ export function PlanningView({
 
   return (
     <div className="space-y-5">
-      {/* 1. TAGIHAN BERULANG & CICILAN / PAYLATER */}
-      <section className="surface-paper rounded-[28px] p-5 shadow-sm">
-        <h2 className="text-base font-bold text-stone-900">Tagihan Berulang & Cicilan / Paylater</h2>
-        <form onSubmit={handleBillSubmit} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <input
-            type="text"
-            placeholder="Nama tagihan (Kos / Listrik / Paylater)"
-            value={billName}
-            onChange={(e) => setBillName(e.target.value)}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-            required
-          />
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="Nominal (Rp)"
-            value={billAmount}
-            onChange={(e) => setBillAmount(e.target.value.replace(/\D/g, ''))}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-            required
-          />
-          <input
-            type="date"
-            value={billDue}
-            onChange={(e) => setBillDue(e.target.value)}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-          />
-          <input
-            type="number"
-            min={1}
-            placeholder="Total cicilan (kosongkan jika rutin)"
-            value={billTotalInst}
-            onChange={(e) => setBillTotalInst(e.target.value)}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-          />
-          <button
-            type="submit"
-            className="sm:col-span-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
-          >
-            + Tambah Tagihan
-          </button>
-        </form>
+      {/* 1. TAGIHAN BERULANG & CICILAN (Coral Folder-Tab Card) */}
+      <section className="overflow-hidden rounded-[28px] bg-obsidian-muted shadow-sm">
+        <div className="flex items-stretch">
+          <div className="rounded-tr-[22px] bg-coral px-5 pt-3.5 pb-1.5 text-xs font-semibold text-obsidian">
+            Tagihan & Cicilan
+          </div>
+          <div className="flex flex-1 items-center justify-end px-4 py-2">
+            <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-[10px] font-medium text-stone-300">
+              {recurringBills.length} aktif
+            </span>
+          </div>
+        </div>
 
-        <ul className="mt-3 space-y-2">
-          {recurringBills.map((b) => (
-            <li
-              key={b.id}
-              className="flex items-center justify-between rounded-xl border border-stone-200 p-3 text-sm"
+        <div className="rounded-tr-[24px] bg-coral px-5 pt-3 pb-5 text-obsidian">
+          <p className="text-xs font-medium text-obsidian/75">
+            Kos, listrik, kuota, atau cicilan paylater dengan pengingat jatuh tempo.
+          </p>
+          <form onSubmit={handleBillSubmit} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Nama tagihan (Kos / Listrik)"
+              value={billName}
+              onChange={(e) => setBillName(e.target.value)}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian placeholder:text-stone-500"
+              required
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Nominal (Rp)"
+              value={billAmount}
+              onChange={(e) => setBillAmount(e.target.value.replace(/\D/g, ''))}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian placeholder:text-stone-500"
+              required
+            />
+            <input
+              type="date"
+              value={billDue}
+              onChange={(e) => setBillDue(e.target.value)}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian [color-scheme:light]"
+            />
+            <input
+              type="number"
+              min={1}
+              placeholder="Total cicilan (opsional)"
+              value={billTotalInst}
+              onChange={(e) => setBillTotalInst(e.target.value)}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian placeholder:text-stone-500"
+            />
+            <button
+              type="submit"
+              className="sm:col-span-2 rounded-2xl bg-obsidian px-4 py-3 text-sm font-semibold text-white hover:bg-obsidian-soft"
             >
-              <div>
-                <p className="font-semibold text-stone-900">
-                  {b.name}
-                  {b.total_installments ? ` (${b.current_installment}/${b.total_installments})` : ''}
-                </p>
-                <p className="text-xs text-stone-500">
-                  {formatRupiah(b.amount)} · Jatuh tempo {b.next_due_date.slice(0, 10)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void onDeleteBill(b.id)}
-                className="rounded-lg border border-stone-200 px-3 py-1 text-xs text-stone-600"
-              >
-                Hapus
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
+              + Tambah Tagihan
+            </button>
+          </form>
 
-      {/* 2. CATATAN UTANG & PIUTANG (TERMASUK UTANG WARUNG / INFORMAL) */}
-      <section className="surface-paper rounded-[28px] p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-base font-bold text-stone-900">Utang & Piutang (Termasuk Warung/Teman)</h2>
-          <span className="text-xs text-stone-600">
-            Sisa Utang: <strong>{formatRupiah(debtSummary.totalUtangRemaining)}</strong> · Piutang:{' '}
-            <strong>{formatRupiah(debtSummary.totalPiutangRemaining)}</strong>
-          </span>
-        </div>
-
-        <form onSubmit={handleDebtSubmit} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <select
-            value={debtDirection}
-            onChange={(e) => setDebtDirection(e.target.value as 'utang' | 'piutang')}
-            className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-          >
-            <option value="utang">Saya Berutang</option>
-            <option value="piutang">Orang Lain Berutang (Piutang)</option>
-          </select>
-          <select
-            value={debtCat}
-            onChange={(e) => setDebtCat(e.target.value as DebtCategory)}
-            className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-          >
-            <option value="warung">Warung</option>
-            <option value="teman">Teman</option>
-            <option value="keluarga">Keluarga</option>
-            <option value="lainnya">Lainnya</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Nama pihak (contoh: Warung Bu Siti)"
-            value={debtParty}
-            onChange={(e) => setDebtParty(e.target.value)}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-            required
-          />
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="Nominal (Rp)"
-            value={debtAmount}
-            onChange={(e) => setDebtAmount(e.target.value.replace(/\D/g, ''))}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-            required
-          />
-          <button
-            type="submit"
-            className="sm:col-span-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
-          >
-            + Catat Utang / Piutang
-          </button>
-        </form>
-
-        <div className="mt-3 space-y-2">
-          {debts.map((d) => {
-            const remaining = Math.max(0, d.amount - d.paid_amount);
-            return (
-              <div key={d.id} className="rounded-xl border border-stone-200 p-3 text-sm space-y-2">
-                <div className="flex items-center justify-between">
+          {recurringBills.length > 0 && (
+            <ul className="mt-3 space-y-2">
+              {recurringBills.map((b) => (
+                <li
+                  key={b.id}
+                  className="flex items-center justify-between rounded-2xl bg-white/85 px-3.5 py-2.5 text-sm text-obsidian"
+                >
                   <div>
-                    <p className="font-semibold text-stone-900">
-                      {d.direction === 'utang' ? 'Utang ke ' : 'Piutang dari '}
-                      {d.counterparty}{' '}
-                      <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] text-stone-600">
-                        {d.category}
-                      </span>
+                    <p className="font-semibold">
+                      {b.name}
+                      {b.total_installments ? ` (${b.current_installment}/${b.total_installments})` : ''}
                     </p>
-                    <p className="text-xs text-stone-500">
-                      Terbayar {formatRupiah(d.paid_amount)} / {formatRupiah(d.amount)} · Sisa{' '}
-                      <strong>{formatRupiah(remaining)}</strong>
+                    <p className="text-xs text-stone-600">
+                      {formatRupiah(b.amount)} · Jatuh tempo {b.next_due_date.slice(0, 10)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-700">
-                    {d.status.replace('_', ' ')}
-                  </span>
-                </div>
-
-                {d.status !== 'lunas' && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Nominal cicil/bayar..."
-                      value={partialInputs[d.id] ?? ''}
-                      onChange={(e) =>
-                        setPartialInputs((prev) => ({
-                          ...prev,
-                          [d.id]: e.target.value.replace(/\D/g, ''),
-                        }))
-                      }
-                      className="flex-1 rounded-xl border border-stone-300 px-3 py-1.5 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const pay = Number.parseInt(partialInputs[d.id] ?? '', 10) || remaining;
-                        void onPayDebt(d.id, pay);
-                        setPartialInputs((prev) => ({ ...prev, [d.id]: '' }));
-                      }}
-                      className="rounded-xl bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white"
-                    >
-                      Bayar Sebagian / Lunas
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  <button
+                    type="button"
+                    onClick={() => void onDeleteBill(b.id)}
+                    className="rounded-full bg-obsidian/10 px-3 py-1 text-xs font-semibold text-obsidian hover:bg-obsidian/20"
+                  >
+                    Hapus
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
-      {/* 3. TARGET TABUNGAN & DANA DARURAT */}
+      {/* 2. UTANG & PIUTANG (Acid Lime Folder-Tab Card) */}
+      <section className="overflow-hidden rounded-[28px] bg-obsidian-muted shadow-sm">
+        <div className="flex items-stretch">
+          <div className="rounded-tr-[22px] bg-limecard px-5 pt-3.5 pb-1.5 text-xs font-semibold text-obsidian">
+            Utang & Piutang
+          </div>
+          <div className="flex flex-1 items-center justify-end px-4 py-2">
+            <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-[10px] font-medium text-stone-300">
+              Utang {formatRupiah(debtSummary.totalUtangRemaining)}
+            </span>
+          </div>
+        </div>
+
+        <div className="rounded-tr-[24px] bg-limecard px-5 pt-3 pb-5 text-obsidian">
+          <p className="text-xs font-medium text-obsidian/75">
+            Catat utang warung, teman, atau keluarga. Mendukung pelunasan sebagian.
+          </p>
+
+          <form onSubmit={handleDebtSubmit} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <select
+              value={debtDirection}
+              onChange={(e) => setDebtDirection(e.target.value as 'utang' | 'piutang')}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian [color-scheme:light]"
+            >
+              <option value="utang">Saya Berutang</option>
+              <option value="piutang">Piutang (Orang Berutang)</option>
+            </select>
+            <select
+              value={debtCat}
+              onChange={(e) => setDebtCat(e.target.value as DebtCategory)}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian [color-scheme:light]"
+            >
+              <option value="warung">Warung</option>
+              <option value="teman">Teman</option>
+              <option value="keluarga">Keluarga</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Nama pihak (Warung Bu Siti)"
+              value={debtParty}
+              onChange={(e) => setDebtParty(e.target.value)}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian placeholder:text-stone-500"
+              required
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Nominal (Rp)"
+              value={debtAmount}
+              onChange={(e) => setDebtAmount(e.target.value.replace(/\D/g, ''))}
+              className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian placeholder:text-stone-500"
+              required
+            />
+            <button
+              type="submit"
+              className="sm:col-span-2 rounded-2xl bg-obsidian px-4 py-3 text-sm font-semibold text-white hover:bg-obsidian-soft"
+            >
+              + Catat Utang / Piutang
+            </button>
+          </form>
+
+          {debts.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {debts.map((d) => {
+                const remaining = Math.max(0, d.amount - d.paid_amount);
+                return (
+                  <div key={d.id} className="rounded-2xl bg-white/85 p-3.5 text-sm text-obsidian space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">
+                          {d.direction === 'utang' ? 'Utang ke ' : 'Piutang dari '}
+                          {d.counterparty}
+                        </p>
+                        <p className="text-xs text-stone-600">
+                          Terbayar {formatRupiah(d.paid_amount)} / {formatRupiah(d.amount)} · Sisa{' '}
+                          <strong>{formatRupiah(remaining)}</strong>
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-obsidian px-2.5 py-1 text-[10px] font-semibold text-limecard">
+                        {d.status.replace('_', ' ')}
+                      </span>
+                    </div>
+
+                    {d.status !== 'lunas' && (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Nominal bayar..."
+                          value={partialInputs[d.id] ?? ''}
+                          onChange={(e) =>
+                            setPartialInputs((prev) => ({
+                              ...prev,
+                              [d.id]: e.target.value.replace(/\D/g, ''),
+                            }))
+                          }
+                          className="flex-1 rounded-xl border border-obsidian/15 bg-white px-3 py-1.5 text-sm text-obsidian"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const pay = Number.parseInt(partialInputs[d.id] ?? '', 10) || remaining;
+                            void onPayDebt(d.id, pay);
+                            setPartialInputs((prev) => ({ ...prev, [d.id]: '' }));
+                          }}
+                          className="rounded-xl bg-obsidian px-3.5 py-1.5 text-xs font-semibold text-white"
+                        >
+                          Bayar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 3. TARGET TABUNGAN & DANA DARURAT (Kartu Putih Bersih) */}
       <section className="surface-paper rounded-[28px] p-5 shadow-sm">
-        <h2 className="text-base font-bold text-stone-900">Target Tabungan & Dana Darurat</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-obsidian">Target Tabungan & Dana Darurat</h2>
+          <span className="text-xs font-medium text-stone-500">{goals.length} target</span>
+        </div>
+
         <form onSubmit={handleGoalSubmit} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <input
             type="text"
-            placeholder="Nama target (Dana Darurat Mini / Laptop)"
+            placeholder="Nama target (Dana Darurat Mini)"
             value={goalName}
             onChange={(e) => setGoalName(e.target.value)}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
             required
           />
           <select
             value={goalType}
             onChange={(e) => setGoalType(e.target.value as 'tabungan' | 'dana_darurat')}
-            className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
           >
             <option value="dana_darurat">Dana Darurat</option>
             <option value="tabungan">Tabungan Umum</option>
@@ -319,78 +345,80 @@ export function PlanningView({
             placeholder="Target nominal (Rp)"
             value={goalTarget}
             onChange={(e) => setGoalTarget(e.target.value.replace(/\D/g, ''))}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
             required
           />
           <input
             type="text"
             inputMode="numeric"
-            placeholder="Rencana sisihkan / bulan (Rp)"
+            placeholder="Sisihkan / bulan (Rp)"
             value={goalPlan}
             onChange={(e) => setGoalPlan(e.target.value.replace(/\D/g, ''))}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
           />
           <button
             type="submit"
-            className="sm:col-span-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
+            className="sm:col-span-2 rounded-2xl bg-obsidian px-4 py-3 text-sm font-semibold text-white hover:bg-obsidian-soft"
           >
             + Tambah Target
           </button>
         </form>
 
-        <div className="mt-3 space-y-3">
-          {goals.map((g) => {
-            const pct = Math.min(100, Math.round((g.collected_amount / g.target_amount) * 100));
-            const estMonths = estimateGoalCompletionMonths(g);
-            return (
-              <div key={g.id} className="rounded-xl border border-stone-200 p-3 text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-stone-900">{g.name}</span>
-                  <span className="text-xs font-semibold text-brand-600">{pct}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-stone-100">
-                  <div className="h-full bg-brand-500" style={{ width: `${pct}%` }} />
-                </div>
-                <p className="text-xs text-stone-500">
-                  Terkumpul {formatRupiah(g.collected_amount)} dari {formatRupiah(g.target_amount)}
-                  {estMonths !== null
-                    ? estMonths === 0
-                      ? ' · Target tercapai!'
-                      : ` · Estimasi tercapai dalam ~${estMonths} bulan`
-                    : ''}
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Tambah tabungan (Rp)"
-                    value={goalAddInputs[g.id] ?? ''}
-                    onChange={(e) =>
-                      setGoalAddInputs((prev) => ({
-                        ...prev,
-                        [g.id]: e.target.value.replace(/\D/g, ''),
-                      }))
-                    }
-                    className="flex-1 rounded-xl border border-stone-300 px-3 py-1.5 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const addVal = Number.parseInt(goalAddInputs[g.id] ?? '', 10) || 0;
-                      if (addVal > 0) {
-                        void onAddGoalProgress(g.id, addVal);
-                        setGoalAddInputs((prev) => ({ ...prev, [g.id]: '' }));
+        {goals.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {goals.map((g) => {
+              const pct = Math.min(100, Math.round((g.collected_amount / g.target_amount) * 100));
+              const estMonths = estimateGoalCompletionMonths(g);
+              return (
+                <div key={g.id} className="rounded-2xl bg-stone-100/80 p-3.5 text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-obsidian">{g.name}</span>
+                    <span className="text-xs font-semibold text-obsidian">{pct}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-stone-200">
+                    <div className="h-full rounded-full bg-obsidian" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="text-xs text-stone-600">
+                    Terkumpul {formatRupiah(g.collected_amount)} / {formatRupiah(g.target_amount)}
+                    {estMonths !== null
+                      ? estMonths === 0
+                        ? ' · Tercapai!'
+                        : ` · ~${estMonths} bulan lagi`
+                      : ''}
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Tambah tabungan (Rp)"
+                      value={goalAddInputs[g.id] ?? ''}
+                      onChange={(e) =>
+                        setGoalAddInputs((prev) => ({
+                          ...prev,
+                          [g.id]: e.target.value.replace(/\D/g, ''),
+                        }))
                       }
-                    }}
-                    className="rounded-xl bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white"
-                  >
-                    + Tabung
-                  </button>
+                      className="flex-1 rounded-xl border bg-white px-3 py-1.5 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const addVal = Number.parseInt(goalAddInputs[g.id] ?? '', 10) || 0;
+                        if (addVal > 0) {
+                          void onAddGoalProgress(g.id, addVal);
+                          setGoalAddInputs((prev) => ({ ...prev, [g.id]: '' }));
+                        }
+                      }}
+                      className="rounded-xl bg-obsidian px-3.5 py-1.5 text-xs font-semibold text-limecard"
+                    >
+                      + Tabung
+                    </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

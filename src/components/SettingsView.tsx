@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { MonitorIcon, MoonIcon, SunIcon } from '@/components/Icons';
+import type { ThemeMode } from '@/hooks/useTheme';
 import {
   exportTransactionsToCsv,
   parseBackupFromJson,
@@ -12,8 +14,6 @@ import {
   signOutUser,
   signUpWithEmail,
 } from '@/lib/supabase';
-import { MonitorIcon, MoonIcon, SunIcon } from '@/components/Icons';
-import type { ThemeMode } from '@/hooks/useTheme';
 import type { AppBackup, Category, Profile, ProfileType, Transaction, Wallet } from '@/lib/types';
 
 interface SettingsViewProps {
@@ -156,7 +156,7 @@ export function SettingsView({
               key={id}
               type="button"
               onClick={() => onChangeTheme(id)}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-2xl px-3 py-2 text-xs font-semibold transition ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 text-xs font-semibold transition ${
                 theme === id
                   ? 'bg-obsidian text-limecard'
                   : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
@@ -169,24 +169,108 @@ export function SettingsView({
         </div>
       </section>
 
-      {/* 1. PROFIL & PERIODE */}
+      {/* 1. AKUN & SINKRONISASI CLOUD (Acid Lime Folder-Tab Card) */}
+      <section className="overflow-hidden rounded-[28px] bg-obsidian-muted shadow-sm">
+        <div className="flex items-stretch">
+          <div className="rounded-tr-[22px] bg-limecard px-5 pt-3.5 pb-1.5 text-xs font-semibold text-obsidian">
+            Cloud & Sinkronisasi
+          </div>
+          <div className="flex flex-1 items-center justify-end px-4 py-2">
+            <button
+              type="button"
+              disabled={syncing}
+              onClick={() => void onTriggerSync()}
+              className="min-h-0 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-white hover:bg-white/20"
+            >
+              {syncing ? 'Sync...' : 'Sync sekarang'}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-tr-[24px] bg-limecard px-5 pt-3 pb-5 text-obsidian space-y-3">
+          {syncMessage && <p className="text-xs font-medium text-obsidian/80">{syncMessage}</p>}
+
+          {!supabaseReady ? (
+            <p className="rounded-2xl bg-white/80 p-3.5 text-xs text-stone-700">
+              Mode lokal offline (IndexedDB) aktif. Hubungkan Supabase di Vercel atau{' '}
+              <code>.env.local</code> untuk mengaktifkan login & sync cloud.
+            </p>
+          ) : authEmail ? (
+            <div className="flex items-center justify-between rounded-2xl bg-white/85 p-3.5 text-sm">
+              <span className="truncate font-medium">{authEmail}</span>
+              <button
+                type="button"
+                onClick={() => void signOutUser()}
+                className="rounded-full bg-obsidian px-3.5 py-1.5 text-xs font-semibold text-white"
+              >
+                Keluar
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian"
+                />
+                <input
+                  type="password"
+                  placeholder="Kata sandi"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="rounded-2xl border-0 bg-white/85 px-3.5 py-2.5 text-sm text-obsidian"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleAuth('login')}
+                  className="rounded-2xl bg-obsidian px-4 py-2.5 text-xs font-semibold text-white"
+                >
+                  Masuk Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleAuth('register')}
+                  className="rounded-2xl bg-white/85 px-4 py-2.5 text-xs font-semibold text-obsidian"
+                >
+                  Daftar Baru
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => void signInWithGoogle()}
+                className="w-full rounded-2xl bg-white px-4 py-2.5 text-xs font-semibold text-obsidian"
+              >
+                Masuk dengan Google
+              </button>
+              {authFeedback && <p className="text-xs font-medium text-obsidian">{authFeedback}</p>}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 2. PROFIL & PERIODE CUSTOM */}
       <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-3">
         <h2 className="text-sm font-semibold text-obsidian">Profil & Periode Custom</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           <label className="block">
-            <span className="text-xs font-medium text-stone-600">Tipe Profil</span>
+            <span className="text-[11px] font-medium text-stone-500">Tipe Profil</span>
             <select
               value={profile.profile_type}
               onChange={(e) => void onUpdateProfile({ profile_type: e.target.value as ProfileType })}
-              className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-2xl border px-3 py-2.5 text-sm"
             >
               <option value="fixed">Gaji Tetap</option>
-              <option value="freelance">Freelance / Tidak Menentu</option>
-              <option value="daily">Serabutan / Transisi</option>
+              <option value="freelance">Freelance</option>
+              <option value="daily">Serabutan</option>
             </select>
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-stone-600">Tanggal Mulai Periode (1-31)</span>
+            <span className="text-[11px] font-medium text-stone-500">Tgl Mulai Periode</span>
             <input
               type="number"
               min={1}
@@ -197,11 +281,11 @@ export function SettingsView({
                   period_start_day: Math.max(1, Math.min(31, Number(e.target.value) || 1)),
                 })
               }
-              className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-2xl border px-3 py-2.5 text-sm"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-stone-600">Biaya Hidup Wajib / Bulan (Rp)</span>
+            <span className="text-[11px] font-medium text-stone-500">Biaya Wajib / Bln</span>
             <input
               type="number"
               min={0}
@@ -209,103 +293,24 @@ export function SettingsView({
               onChange={(e) =>
                 void onUpdateProfile({ mandatory_living_cost: Math.max(0, Number(e.target.value) || 0) })
               }
-              className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-2xl border px-3 py-2.5 text-sm"
             />
           </label>
         </div>
       </section>
 
-      {/* 2. AKUN & SINKRONISASI SUPABASE */}
-      <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-stone-900">Akun & Sinkronisasi Cloud (Supabase)</h2>
-          <button
-            type="button"
-            disabled={syncing}
-            onClick={() => void onTriggerSync()}
-            className="rounded-xl border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600"
-          >
-            {syncing ? 'Menyinkronkan...' : 'Sync Sekarang'}
-          </button>
-        </div>
-
-        {syncMessage && <p className="text-xs text-stone-600">{syncMessage}</p>}
-
-        {!supabaseReady ? (
-          <p className="rounded-xl bg-stone-50 p-3 text-xs text-stone-600">
-            Aplikasi saat ini berjalan 100% di mode lokal offline (IndexedDB). Isi{' '}
-            <code>NEXT_PUBLIC_SUPABASE_URL</code> dan <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> di{' '}
-            <code>.env.local</code> untuk mengaktifkan login & sinkronisasi cloud.
-          </p>
-        ) : authEmail ? (
-          <div className="flex items-center justify-between rounded-xl bg-brand-50 p-3 text-sm">
-            <span>
-              Masuk sebagai <strong>{authEmail}</strong>
-            </span>
-            <button
-              type="button"
-              onClick={() => void signOutUser()}
-              className="rounded-lg border border-stone-300 bg-white px-3 py-1 text-xs font-semibold"
-            >
-              Keluar
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-              />
-              <input
-                type="password"
-                placeholder="Kata sandi"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void handleAuth('login')}
-                className="rounded-xl bg-brand-500 px-4 py-2 text-xs font-semibold text-white"
-              >
-                Masuk Email
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleAuth('register')}
-                className="rounded-xl border border-brand-500 px-4 py-2 text-xs font-semibold text-brand-600"
-              >
-                Daftar Baru
-              </button>
-              <button
-                type="button"
-                onClick={() => void signInWithGoogle()}
-                className="rounded-xl border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-700"
-              >
-                Masuk dengan Google
-              </button>
-            </div>
-            {authFeedback && <p className="text-xs text-warm-700">{authFeedback}</p>}
-          </div>
-        )}
-      </section>
-
       {/* 3. TAMBAH DOMPET CUSTOM & KATEGORI CUSTOM */}
       <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-4">
-        <h2 className="text-base font-bold text-stone-900">Dompet ({wallets.length}) & Kategori ({categories.length})</h2>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <h2 className="text-sm font-semibold text-obsidian">
+          Custom Dompet ({wallets.length}) & Kategori ({categories.length})
+        </h2>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <input
             type="text"
-            placeholder="Nama dompet baru (misal: SeaBank)"
+            placeholder="Dompet baru (SeaBank / Jago)"
             value={newWalletName}
             onChange={(e) => setNewWalletName(e.target.value)}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
           />
           <input
             type="text"
@@ -313,7 +318,7 @@ export function SettingsView({
             placeholder="Saldo awal (Rp)"
             value={newWalletBalance}
             onChange={(e) => setNewWalletBalance(e.target.value.replace(/\D/g, ''))}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
           />
           <button
             type="button"
@@ -327,36 +332,36 @@ export function SettingsView({
               setNewWalletName('');
               setNewWalletBalance('');
             }}
-            className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
+            className="sm:col-span-2 rounded-2xl bg-obsidian px-4 py-3 text-sm font-semibold text-white hover:bg-obsidian-soft"
           >
-            + Dompet Custom
+            + Tambah Dompet Custom
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-4 border-t border-stone-100 pt-3">
+        <div className="grid grid-cols-1 gap-2 border-t border-stone-100 pt-4 sm:grid-cols-2">
           <input
             type="text"
-            placeholder="Kategori baru"
+            placeholder="Kategori pengeluaran baru"
             value={newCatName}
             onChange={(e) => setNewCatName(e.target.value)}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
           />
           <select
             value={newCatPriority}
             onChange={(e) => setNewCatPriority(e.target.value as Category['priority'])}
-            className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
+            className="rounded-2xl border px-3.5 py-2.5 text-sm"
           >
-            <option value="wajib">Wajib</option>
-            <option value="penting">Penting</option>
-            <option value="bisa_ditunda">Bisa Ditunda</option>
+            <option value="wajib">Prioritas: Wajib</option>
+            <option value="penting">Prioritas: Penting</option>
+            <option value="bisa_ditunda">Prioritas: Bisa Ditunda</option>
           </select>
           <input
             type="text"
             inputMode="numeric"
-            placeholder="Budget/bln"
+            placeholder="Budget bulanan (Rp)"
             value={newCatBudget}
             onChange={(e) => setNewCatBudget(e.target.value.replace(/\D/g, ''))}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="sm:col-span-2 rounded-2xl border px-3.5 py-2.5 text-sm"
           />
           <button
             type="button"
@@ -371,33 +376,33 @@ export function SettingsView({
               });
               setNewCatName('');
             }}
-            className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
+            className="sm:col-span-2 rounded-2xl bg-obsidian px-4 py-3 text-sm font-semibold text-white hover:bg-obsidian-soft"
           >
-            + Kategori
+            + Tambah Kategori Custom
           </button>
         </div>
       </section>
 
       {/* 4. BACKUP EXPORT / IMPORT CSV & JSON */}
       <section className="surface-paper rounded-[28px] p-5 shadow-sm space-y-3">
-        <h2 className="text-base font-bold text-stone-900">Cadangan Data (Export & Import)</h2>
-        <div className="flex flex-wrap gap-2">
+        <h2 className="text-sm font-semibold text-obsidian">Cadangan Data & Cache</h2>
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => void handleExportJson()}
-            className="rounded-xl bg-brand-500 px-4 py-2 text-xs font-semibold text-white"
+            className="rounded-2xl bg-obsidian px-3 py-2.5 text-xs font-semibold text-white"
           >
-            Export Backup JSON Lengkap
+            Export JSON
           </button>
           <button
             type="button"
             onClick={handleExportCsv}
-            className="rounded-xl border border-brand-500 px-4 py-2 text-xs font-semibold text-brand-600"
+            className="rounded-2xl bg-limecard px-3 py-2.5 text-xs font-semibold text-obsidian"
           >
-            Export Transaksi CSV
+            Export CSV
           </button>
-          <label className="inline-flex cursor-pointer items-center rounded-xl border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-700">
-            Import Backup JSON
+          <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-stone-100 px-3 py-2.5 text-xs font-semibold text-obsidian hover:bg-stone-200">
+            Import JSON
             <input
               type="file"
               accept=".json,application/json"
@@ -408,12 +413,12 @@ export function SettingsView({
           <button
             type="button"
             onClick={() => void handleClearAppCache()}
-            className="rounded-xl border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-700"
+            className="rounded-2xl bg-stone-100 px-3 py-2.5 text-xs font-semibold text-obsidian hover:bg-stone-200"
           >
-            Bersihkan Cache Aset (PWA)
+            Bersihkan Cache
           </button>
         </div>
-        {backupMessage && <p className="text-xs text-brand-600">{backupMessage}</p>}
+        {backupMessage && <p className="text-xs font-medium text-stone-700">{backupMessage}</p>}
       </section>
     </div>
   );
