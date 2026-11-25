@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import {
   calculateCategoryBudgets,
   calculateNeedVsWantSummary,
@@ -33,50 +34,78 @@ export function DashboardView({
   recurringBills,
   onToggleEmergencyMode,
 }: DashboardViewProps) {
-  const now = new Date();
-  const period = getCustomPeriodRange(now, profile.period_start_day);
-  const periodTx = filterTransactionsInRange(transactions, period.start, period.end);
+  const {
+    period,
+    walletBalances,
+    totalBalance,
+    totals,
+    needWant,
+    safeDaily,
+    survival,
+    runwayMonths,
+    categoryBudgets,
+    insights,
+    upcomingBills,
+  } = useMemo(() => {
+    const now = new Date();
+    const p = getCustomPeriodRange(now, profile.period_start_day);
+    const pTx = filterTransactionsInRange(transactions, p.start, p.end);
 
-  const walletBalances = calculateWalletBalances(wallets, transactions);
-  const totalBalance = calculateTotalBalance(wallets, transactions);
-  const totals = calculatePeriodTotals(periodTx);
-  const needWant = calculateNeedVsWantSummary(periodTx);
+    const wBalances = calculateWalletBalances(wallets, transactions);
+    const tBalance = calculateTotalBalance(wallets, transactions);
+    const pTotals = calculatePeriodTotals(pTx);
+    const nWant = calculateNeedVsWantSummary(pTx);
 
-  // Hitung batas harian wajib jika mode darurat aktif
-  const mandatoryDailyCap =
-    profile.mandatory_living_cost > 0 ? Math.floor(profile.mandatory_living_cost / 30) : undefined;
+    const mandatoryDailyCap =
+      profile.mandatory_living_cost > 0 ? Math.floor(profile.mandatory_living_cost / 30) : undefined;
 
-  const safeDaily = calculateSafeDailySpend({
-    availableBalance: totalBalance,
-    remainingDays: period.remainingDays,
-    emergencyMode: profile.emergency_mode,
-    mandatoryDailyCap,
-  });
+    const sDaily = calculateSafeDailySpend({
+      availableBalance: tBalance,
+      remainingDays: p.remainingDays,
+      emergencyMode: profile.emergency_mode,
+      mandatoryDailyCap,
+    });
 
-  const dailyBaseline =
-    profile.mandatory_living_cost > 0 ? Math.max(20000, Math.round(profile.mandatory_living_cost / 30)) : 50000;
+    const dailyBaseline =
+      profile.mandatory_living_cost > 0
+        ? Math.max(20000, Math.round(profile.mandatory_living_cost / 30))
+        : 50000;
 
-  const survival = calculateSurvivalDays({
-    availableBalance: totalBalance,
-    dailyBaselineCost: dailyBaseline,
-    emergencyMode: profile.emergency_mode,
-  });
+    const surv = calculateSurvivalDays({
+      availableBalance: tBalance,
+      dailyBaselineCost: dailyBaseline,
+      emergencyMode: profile.emergency_mode,
+    });
 
-  const runwayMonths = calculateRunwayMonths(totalBalance, profile.mandatory_living_cost);
-  const categoryBudgets = calculateCategoryBudgets(categories, periodTx, profile.emergency_mode);
-  const insights = generateAutomaticInsights({
-    transactions,
-    categories,
-    profile,
-    referenceDate: now,
-  });
+    const rMonths = calculateRunwayMonths(tBalance, profile.mandatory_living_cost);
+    const cBudgets = calculateCategoryBudgets(categories, pTx, profile.emergency_mode);
+    const ins = generateAutomaticInsights({
+      transactions,
+      categories,
+      profile,
+      referenceDate: now,
+    });
 
-  // Pengingat tagihan jatuh tempo dalam 7 hari ke depan
-  const upcomingBills = recurringBills.filter((bill) => {
-    const dueMs = new Date(bill.next_due_date).getTime();
-    const diffDays = (dueMs - now.getTime()) / (24 * 60 * 60 * 1000);
-    return diffDays <= 7 && diffDays >= -2;
-  });
+    const upBills = recurringBills.filter((bill) => {
+      const dueMs = new Date(bill.next_due_date).getTime();
+      const diffDays = (dueMs - now.getTime()) / (24 * 60 * 60 * 1000);
+      return diffDays <= 7 && diffDays >= -2;
+    });
+
+    return {
+      period: p,
+      walletBalances: wBalances,
+      totalBalance: tBalance,
+      totals: pTotals,
+      needWant: nWant,
+      safeDaily: sDaily,
+      survival: surv,
+      runwayMonths: rMonths,
+      categoryBudgets: cBudgets,
+      insights: ins,
+      upcomingBills: upBills,
+    };
+  }, [profile, wallets, categories, transactions, recurringBills]);
 
   return (
     <div className="space-y-4">

@@ -62,6 +62,18 @@ export function SettingsView({
 
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
 
+  const handleClearAppCache = async () => {
+    if (typeof window === 'undefined' || !('caches' in window)) {
+      setBackupMessage('Browser ini tidak menggunakan Cache Storage.');
+      return;
+    }
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => caches.delete(k)));
+    setBackupMessage(
+      `Cache aplikasi dibersihkan (${keys.length} cache). Data catatan keuangan kamu tetap aman di IndexedDB.`
+    );
+  };
+
   const handleAuth = async (mode: 'login' | 'register') => {
     setAuthFeedback(null);
     try {
@@ -359,6 +371,13 @@ export function SettingsView({
               className="hidden"
             />
           </label>
+          <button
+            type="button"
+            onClick={() => void handleClearAppCache()}
+            className="rounded-xl border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-700"
+          >
+            Bersihkan Cache Aset (PWA)
+          </button>
         </div>
         {backupMessage && <p className="text-xs text-brand-600">{backupMessage}</p>}
       </section>
