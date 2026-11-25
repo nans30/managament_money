@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    background-color: #f6f8f7;
+    color: #1f2937;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Memastikan semua kontrol interaktif memenuhi target sentuh minimal 44px */
+  button,
+  a,
+  select,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px;
+  }
+}
