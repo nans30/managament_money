@@ -8,6 +8,26 @@
     background-color: #f6f8f7;
     color: #1f2937;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  html.dark,
+  html.dark body {
+    background-color: #0e1311;
+    color: #f3f4f6;
+    color-scheme: dark;
+  }
+
+  html.dark input,
+  html.dark select,
+  html.dark textarea {
+    background-color: #1c2420;
+    border-color: #313d37;
+    color: #f3f4f6;
+  }
+
+  html.dark input::placeholder {
+    color: #9ca3af;
   }
 
   /* Memastikan semua kontrol interaktif memenuhi target sentuh minimal 44px */
@@ -18,4 +38,55 @@
   input[type="button"] {
     min-height: 44px;
   }
+}
+
+/* Permukaan & tipografi Dark Mode yang tenang dan kontras tinggi di seluruh komponen */
+:where(html.dark) .bg-white {
+  background-color: #161c19;
+}
+:where(html.dark) .bg-stone-50 {
+  background-color: #1e2622;
+}
+:where(html.dark) .bg-stone-100 {
+  background-color: #26302b;
+}
+:where(html.dark) .bg-stone-200 {
+  background-color: #2f3b35;
+}
+:where(html.dark) .bg-warm-50 {
+  background-color: rgba(146, 64, 14, 0.22);
+}
+:where(html.dark) .bg-warm-100 {
+  background-color: rgba(146, 64, 14, 0.35);
+}
+:where(html.dark) .bg-brand-50 {
+  background-color: rgba(45, 106, 79, 0.22);
+}
+:where(html.dark) .bg-brand-100 {
+  background-color: rgba(45, 106, 79, 0.32);
+}
+:where(html.dark) .border-stone-100,
+:where(html.dark) .border-stone-200,
+:where(html.dark) .border-stone-300 {
+  border-color: #2b3530;
+}
+:where(html.dark) .text-stone-900 {
+  color: #f3f4f6;
+}
+:where(html.dark) .text-stone-800 {
+  color: #e5e7eb;
+}
+:where(html.dark) .text-stone-700 {
+  color: #d1d5db;
+}
+:where(html.dark) .text-stone-600,
+:where(html.dark) .text-stone-500 {
+  color: #9ca3af;
+}
+:where(html.dark) .text-brand-600,
+:where(html.dark) .text-brand-700 {
+  color: #6ee7b7;
+}
+:where(html.dark) .text-warm-700 {
+  color: #fcd34d;
 }

@@ -12,6 +12,7 @@ import {
   signOutUser,
   signUpWithEmail,
 } from '@/lib/supabase';
+import type { ThemeMode } from '@/hooks/useTheme';
 import type { AppBackup, Category, Profile, ProfileType, Transaction, Wallet } from '@/lib/types';
 
 interface SettingsViewProps {
@@ -23,6 +24,8 @@ interface SettingsViewProps {
   authEmail: string | null;
   syncing: boolean;
   syncMessage: string | null;
+  theme: ThemeMode;
+  onChangeTheme: (mode: ThemeMode) => void;
   onUpdateProfile: (patch: Partial<Profile>) => Promise<void>;
   onAddWallet: (name: string, type: Wallet['type'], initialBalance: number) => Promise<void>;
   onSaveCategory: (
@@ -42,6 +45,8 @@ export function SettingsView({
   authEmail,
   syncing,
   syncMessage,
+  theme,
+  onChangeTheme,
   onUpdateProfile,
   onAddWallet,
   onSaveCategory,
@@ -135,9 +140,36 @@ export function SettingsView({
 
   return (
     <div className="space-y-5">
+      {/* 0. TAMPILAN LIGHT / DARK MODE */}
+      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 dark:bg-stone-900 dark:border-stone-800 space-y-3">
+        <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">Tampilan (Tema)</h2>
+        <div className="grid grid-cols-3 gap-2">
+          {(
+            [
+              { id: 'system', label: 'Ikuti Sistem' },
+              { id: 'light', label: 'Mode Terang' },
+              { id: 'dark', label: 'Mode Gelap' },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onChangeTheme(opt.id)}
+              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
+                theme === opt.id
+                  ? 'border-brand-500 bg-brand-500 text-white'
+                  : 'border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* 1. PROFIL & PERIODE */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 space-y-3">
-        <h2 className="text-base font-bold text-stone-900">Profil & Periode Custom</h2>
+      <section className="rounded-2xl bg-white p-4 shadow-sm border border-stone-200 dark:bg-stone-900 dark:border-stone-800 space-y-3">
+        <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">Profil & Periode Custom</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="block">
             <span className="text-xs font-medium text-stone-600">Tipe Profil</span>
